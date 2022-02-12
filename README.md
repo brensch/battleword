@@ -77,4 +77,12 @@ Once all players are finished, the engine will send you the results of everyone 
 ```
 git tag -a v0.1.0 -m "First release"
 git push origin v0.1.0
+goreleaser release
 ```
+
+to do a dry run (no upload): 
+```
+goreleaser release --snapshot --rm-dist
+```
+
+`GITHUB_TOKEN` is a standard PAT from github and needs to be set to upload.
