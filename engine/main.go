@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"strings"
 
@@ -14,8 +13,8 @@ var (
 	NumRounds  = 6
 	NumLetters = 5
 
-	PlayerNamesJoined string
-	PlayerURIsJoined  string
+	PlayerNamesJoined = "solvo"
+	PlayerURIsJoined  = "http://localhost:8080"
 )
 
 func init() {
@@ -31,6 +30,8 @@ func main() {
 
 	flag.Parse()
 
+	log.Printf("started game, players: %s", PlayerNamesJoined)
+
 	playerNames := strings.Split(PlayerNamesJoined, ",")
 	playerURIs := strings.Split(PlayerURIsJoined, ",")
 
@@ -43,8 +44,6 @@ func main() {
 		log.Println("you need the same number of names as api locations")
 		return
 	}
-
-	fmt.Println("length", len(playerNames))
 
 	var players []*battleword.Player
 
@@ -63,6 +62,6 @@ func main() {
 
 	log.Println("game finished")
 	gameJSON, _ := json.Marshal(gamesState)
-	log.Println(string(gameJSON))
+	log.Println("final result:", string(gameJSON))
 
 }

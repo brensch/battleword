@@ -11,9 +11,9 @@ builds:
       - linux
       - windows
       - darwin
-  - id: demoguesser
-    dir: demoguesser
-    binary: demoguesser
+  - id: solvo
+    dir: solvo
+    binary: solvo
     env:
       - CGO_ENABLED=0
     goos:
