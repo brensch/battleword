@@ -2,7 +2,19 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - env:
+  - id: engine
+    dir: engine
+    binary: engine
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+  - id: demoguesser
+    dir: demoguesser
+    binary: demoguesser
+    env:
       - CGO_ENABLED=0
     goos:
       - linux

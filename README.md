@@ -71,3 +71,10 @@ Once all players are finished, the engine will send you the results of everyone 
 
 ### notes
  the logic for the yellows when multiple letters are incorrect is not correct RN. I need to figure out what wordle does then make it do the same.
+
+### releasing
+ in order to release, run:
+```
+git tag -a v0.1.0 -m "First release"
+git push origin v0.1.0
+```
