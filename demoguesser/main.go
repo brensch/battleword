@@ -29,14 +29,15 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 
 	prevGuessesJSON, _ := json.Marshal(prevGuesses)
 
+	word := GuessWord()
+
 	log.Println(string(prevGuessesJSON))
+	log.Println("guessing", word)
 
 	guess := battleword.Guess{
-		Guess: "beast",
+		Guess: word,
 		Shout: "it's not beast",
 	}
-
-	// time.Sleep(1 * time.Second)
 
 	err = json.NewEncoder(w).Encode(guess)
 	if err != nil {

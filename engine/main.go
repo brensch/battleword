@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"strings"
 
@@ -30,14 +31,20 @@ func main() {
 
 	flag.Parse()
 
-	log.Println(PlayerNamesJoined)
 	playerNames := strings.Split(PlayerNamesJoined, ",")
 	playerURIs := strings.Split(PlayerURIsJoined, ",")
+
+	if playerNames[0] == "" {
+		log.Println("you need to define players")
+		return
+	}
 
 	if len(playerNames) != len(playerURIs) {
 		log.Println("you need the same number of names as api locations")
 		return
 	}
+
+	fmt.Println("length", len(playerNames))
 
 	var players []*battleword.Player
 
@@ -46,7 +53,7 @@ func main() {
 
 	}
 
-	gamesState, err := battleword.InitGameState(players, 5, 6)
+	gamesState, err := battleword.InitGameState(battleword.AllWords, battleword.CommonWords, players, 5, 6)
 	if err != nil {
 		log.Println("got error initing game", err)
 		return

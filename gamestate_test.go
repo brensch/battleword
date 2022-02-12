@@ -10,7 +10,21 @@ func TestInitGameState(t *testing.T) {
 			Name: "brend",
 		},
 	}
-	g, err := InitGameState(players, 5, 6)
+
+	var allWords, commonWords []string
+
+	allWords = []string{
+		"beast",
+		"feast",
+		"meast",
+	}
+
+	commonWords = []string{
+		"beast",
+		"feast",
+	}
+
+	g, err := InitGameState(allWords, commonWords, players, 5, 6)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
