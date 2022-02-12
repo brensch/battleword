@@ -15,19 +15,26 @@ func GetResult(guess, answer string) []int {
 
 	result := make([]int, len(answer))
 
-	// TODO: make only the correct number of yellows show up
-	for guessCharacterPosition, guessCharacter := range guess {
-		result[guessCharacterPosition] = LetterResultBlack
-		for answerCharacterPosition, answerCharacter := range answer {
-			if guessCharacter == answerCharacter && guessCharacterPosition == answerCharacterPosition {
-				result[guessCharacterPosition] = LetterResultGreen
+	// I think there's probably an optimisation i could do here if
+	// i spent more time on leetcode.
+	for answerPos, answerChar := range answer {
+		bestPos := -1
+		bestResult := 0
+		for guessPos, guessChar := range guess {
+			if guessChar == answerChar && guessPos == answerPos {
+				bestPos = guessPos
+				bestResult = 2
 				break
 			}
 
-			if guessCharacter == answerCharacter {
-				result[guessCharacterPosition] = LetterResultYellow
+			if bestPos == -1 && guessChar == answerChar {
+				bestPos = guessPos
+				bestResult = 1
 			}
+		}
 
+		if bestPos >= 0 {
+			result[bestPos] = bestResult
 		}
 	}
 
