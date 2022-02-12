@@ -5,37 +5,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type GameState struct {
 	Players []*Player `json:"players,omitempty"`
 	Answer  string    `json:"answer,omitempty"`
 
-	// Winner
 	numLetters int
 	numRounds  int
+
+	allWords    []string
+	commonWords []string
 }
 
-func InitGameState(players []*Player, numLetters, numRounds int) (*GameState, error) {
+func InitGameState(allWords, commonWords []string, players []*Player, numLetters, numRounds int) (*GameState, error) {
 
 	if len(players) == 0 {
 		return nil, fmt.Errorf("no players")
 	}
 	state := &GameState{
 		Players: players,
-		Answer:  GetRandomWord(numLetters),
+		Answer:  GetRandomWord(commonWords),
 
 		numLetters: numLetters,
 		numRounds:  numRounds,
+
+		allWords:    allWords,
+		commonWords: commonWords,
 	}
 
 	return state, nil
 }
 
-func GetRandomWord(numLetters int) string {
-	return "pause"
+func GetRandomWord(words []string) string {
+	// don't need to do this any more legit than this i don't think
+	rand.Seed(time.Now().UnixNano())
+
+	return words[rand.Intn(len(words))]
 }
 
 func (g *GameState) PlayGame() {
