@@ -48,20 +48,20 @@ func main() {
 	var players []*battleword.Player
 
 	for i, name := range playerNames {
-		players = append(players, battleword.InitPlayer(name, playerURIs[i]))
+		players = append(players, battleword.InitPlayer(name, "cool guy", playerURIs[i]))
 
 	}
 
-	gamesState, err := battleword.InitGameState(battleword.AllWords, battleword.CommonWords, players, 5, 6)
+	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, players, 5, 6, 1)
 	if err != nil {
 		log.Println("got error initing game", err)
 		return
 	}
 
-	gamesState.PlayGame()
+	match.Start()
 
 	log.Println("game finished")
-	gameJSON, _ := json.Marshal(gamesState)
+	gameJSON, _ := json.Marshal(match)
 	log.Println("final result:", string(gameJSON))
 
 }

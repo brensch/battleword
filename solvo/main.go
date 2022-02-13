@@ -62,7 +62,7 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var prevGuesses battleword.PlayerState
+	var prevGuesses battleword.PlayerGameState
 	err := json.NewDecoder(r.Body).Decode(&prevGuesses)
 	if err != nil {
 		log.Println(err)
@@ -81,6 +81,8 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 		Shout: RandomShout(),
 	}
 
+	// time.Sleep(1 * time.Second)
+
 	err = json.NewEncoder(w).Encode(guess)
 	if err != nil {
 		log.Println(err)
@@ -94,7 +96,7 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var finalState battleword.GameState
+	var finalState battleword.Game
 	err := json.NewDecoder(r.Body).Decode(&finalState)
 	if err != nil {
 		log.Println(err)

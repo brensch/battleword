@@ -7,36 +7,77 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-type PlayerState struct {
+type Player struct {
+	Definition PlayerDefinition   `json:"definition,omitempty"`
+	Games      []*PlayerGameState `json:"state,omitempty"`
+
+	connection *PlayerConnection
+}
+
+type PlayerDefinition struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// This is all secret or not json readable types
+type PlayerConnection struct {
+	uri string
+
+	// TODO: add things specific to each player
+	client                      *http.Client
+	concurrentConnectionLimiter chan struct{}
+}
+
+type PlayerGameState struct {
+	GameID string `json:"game_id,omitempty"`
+
 	Guesses []string `json:"guesses,omitempty"`
 	Results [][]int  `json:"results,omitempty"`
+	Shouts  []string `json:"shouts,omitempty"`
 
-	Times []time.Duration `json:"times,omitempty"`
+	Times     []time.Duration `json:"times,omitempty"`
+	TotalTime time.Duration   `json:"total_time,omitempty"`
 }
 
-type Player struct {
-	Name  string      `json:"name,omitempty"`
-	State PlayerState `json:"state,omitempty"`
-
-	uri string
-}
-
-func InitPlayer(name, uri string) *Player {
+func InitPlayer(name, description, uri string) *Player {
+	id := uuid.New()
 	return &Player{
-		Name: name,
-		uri:  uri,
+		Definition: PlayerDefinition{
+			ID:          id.String(),
+			Name:        name,
+			Description: description,
+		},
+		connection: &PlayerConnection{
+			uri: uri,
+		},
 	}
 }
 
-func (p *Player) PlayGame(answer string, numRounds int) {
+func (p *Player) PlayGame(g *Game) *PlayerGameState {
+	gameState := &PlayerGameState{
+		GameID: g.ID,
+	}
+
+	p.Games = append(p.Games, gameState)
+
+	gameState.PlayGame(p.connection, p.Definition, g)
+
+	return gameState
+
+}
+
+func (s *PlayerGameState) PlayGame(c *PlayerConnection, d PlayerDefinition, g *Game) {
 
 	var correct bool
 	var err error
 
 	for {
-		correct, err = p.DoMove(answer)
+		correct, err = s.DoMove(c, g.Answer)
 		if err != nil {
 			break
 		}
@@ -46,14 +87,13 @@ func (p *Player) PlayGame(answer string, numRounds int) {
 		}
 
 		// https://i.redd.it/cw0cedsc93h81.jpg
-		if len(p.State.Guesses) == numRounds {
+		if len(s.Guesses) == g.numRounds {
 			break
 		}
 	}
 
-	var totalTime time.Duration
-	for _, guessTime := range p.State.Times {
-		totalTime += guessTime
+	for _, guessTime := range s.Times {
+		s.TotalTime += guessTime
 	}
 
 	finished := "finished"
@@ -61,43 +101,46 @@ func (p *Player) PlayGame(answer string, numRounds int) {
 		finished = "couldn't quite get it"
 	}
 
-	log.Printf("%s %s in %d turns and %d milliseconds\n", p.Name, finished, len(p.State.Guesses), totalTime.Milliseconds())
+	log.Printf("%s %s in %d turns and %d milliseconds\n", d.Name, finished, len(s.Guesses), s.TotalTime.Milliseconds())
 }
 
-func (p *Player) DoMove(answer string) (bool, error) {
+func (s *PlayerGameState) DoMove(c *PlayerConnection, answer string) (bool, error) {
 
 	start := time.Now()
 
-	guess, err := p.GetGuess()
+	guess, err := s.GetGuess(c)
 	if err != nil {
 		return false, err
 	}
 
-	err = p.State.RecordGuess(guess, answer)
+	err = s.RecordGuess(guess, answer)
 	if err != nil {
 		return false, err
 	}
 
-	p.State.Times = append(p.State.Times, time.Since(start))
+	s.Times = append(s.Times, time.Since(start))
 
 	correct := false
-	if guess == answer {
+	if guess.Guess == answer {
 		correct = true
 	}
 
 	return correct, nil
 }
 
-func (g *PlayerState) RecordGuess(guess, answer string) error {
+func (s *PlayerGameState) RecordGuess(guess *Guess, answer string) error {
 
-	if !ValidGuess(guess, answer) {
+	if !ValidGuess(guess.Guess, answer) {
 		return fmt.Errorf("guess is invalid")
 	}
 
-	result := GetResult(guess, answer)
+	result := GetResult(guess.Guess, answer)
 
-	g.Guesses = append(g.Guesses, guess)
-	g.Results = append(g.Results, result)
+	s.Guesses = append(s.Guesses, guess.Guess)
+	s.Results = append(s.Results, result)
+
+	// TODO: also implement shouter to send shouts to everyone.
+	s.Shouts = append(s.Shouts, guess.Shout)
 
 	return nil
 }
@@ -109,34 +152,31 @@ type Guess struct {
 	Shout string `json:"shout,omitempty"`
 }
 
-func (p *Player) GetGuess() (string, error) {
+func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 
-	guessesJson, err := json.Marshal(p.State)
+	guessesJson, err := json.Marshal(s)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/guess", p.uri), bytes.NewReader(guessesJson))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/guess", c.uri), bytes.NewReader(guessesJson))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// TODO: make this a proper client
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	defer res.Body.Close()
 
-	var guess Guess
+	var guess *Guess
 	err = json.NewDecoder(res.Body).Decode(&guess)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	// TODO: store this somewhere so it gets sent to other players
-	log.Printf("%s shouted: %s\n", p.Name, guess.Shout)
-
-	return guess.Guess, nil
+	return guess, nil
 }
