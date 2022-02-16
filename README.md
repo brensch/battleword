@@ -59,33 +59,75 @@ Once all players are finished, the engine will send you the results of everyone 
 ```json
 {
 	"players": [{
-		"name": "brendo",
-		"state": {
-			"guesses": ["beast", "lapse", "pause"],
+		"definition": {
+			"id": "a03753b1-c30c-4bad-8b58-201539980d44",
+			"name": "solvo",
+			"description": "cool guy"
+		},
+		"state": [{
+			"game_id": "b52ccd3a-6344-4e14-bd2c-87d5502fd128",
+			"guesses": ["mouse", "riser", "brown", "polka", "quell", "panel"],
 			"results": [
-				[0, 1, 1, 2, 0],
-				[0, 2, 1, 2, 2],
-				[2, 2, 2, 2, 2]
+				[0, 2, 0, 2, 0],
+				[1, 0, 1, 0, 0],
+				[0, 1, 1, 1, 0],
+				[0, 2, 0, 0, 0],
+				[0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0]
 			],
-			"times": [1012000, 336700, 473626]
-		}
+			"shouts": ["what's the point of anything?", "wordle is fun, but for how long?", "what's the point of anything?", "what's the point of anything?", "wordle is fun, but for how long?", "wordle is fun, but for how long?"],
+			"times": [618300, 258000, 302800, 292100, 198500, 206600],
+			"total_time": 1876300
+		}]
 	}, {
-		"name": "skye",
-		"state": {
-			"guesses": ["beast", "beast", "beast", "beast", "beast", "beast"],
+		"definition": {
+			"id": "e64b7af2-6785-4923-b56e-7ab1b7622ed2",
+			"name": "bolvo",
+			"description": "cool guy"
+		},
+		"state": [{
+			"game_id": "b52ccd3a-6344-4e14-bd2c-87d5502fd128",
+			"guesses": ["crick", "endow", "stomp", "grass", "shove", "flora"],
 			"results": [
-				[0, 1, 1, 2, 0],
-				[0, 1, 1, 2, 0],
-				[0, 1, 1, 2, 0],
-				[0, 1, 1, 2, 0],
-				[0, 1, 1, 2, 0],
-				[0, 1, 1, 2, 0]
+				[0, 1, 0, 0, 0],
+				[0, 0, 0, 1, 1],
+				[1, 1, 1, 0, 0],
+				[0, 1, 0, 2, 0],
+				[1, 0, 1, 0, 0],
+				[0, 0, 1, 1, 0]
 			],
-			"times": [1012000, 336700, 232300, 160800, 282900, 290000]
-		}
+			"shouts": ["there has to be a better strat than this", "what's the point of anything?", "you will one day be dust, but i will always be solvo", "wordle is fun, but for how long?", "there has to be a better strat than this", "you will one day be dust, but i will always be solvo"],
+			"times": [647700, 307700, 277200, 344200, 203100, 177000],
+			"total_time": 1956900
+		}]
 	}],
-	"answer": "pause"
-}
+	"games": [{
+		"id": "b52ccd3a-6344-4e14-bd2c-87d5502fd128",
+		"answer": "worst",
+		"result": {
+			"start": "2022-02-15T21:51:07.8650467-08:00",
+			"end": "2022-02-15T21:51:07.8670158-08:00",
+			"fastest": {
+				"player": {
+					"id": "a03753b1-c30c-4bad-8b58-201539980d44",
+					"name": "solvo",
+					"description": "cool guy"
+				},
+				"time": 1876300
+			},
+			"most_accurate": {
+				"player": {
+					"id": "a03753b1-c30c-4bad-8b58-201539980d44",
+					"name": "solvo",
+					"description": "cool guy"
+				},
+				"average_guess_length": 6
+			},
+			"loudest": {
+				"player": {}
+			}
+		}
+	}]
 ```
 
 ### notes
