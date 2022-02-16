@@ -27,7 +27,7 @@ func GetResult(guess, answer string) []int {
 				break
 			}
 
-			if bestPos == -1 && guessChar == answerChar {
+			if (bestPos == -1 || result[bestPos] > 0) && guessChar == answerChar {
 				bestPos = guessPos
 				bestResult = 1
 			}

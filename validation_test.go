@@ -27,6 +27,8 @@ var (
 		{"ruler", "ulcer", []int{0, 1, 1, 2, 2}},
 		{"bluer", "ulcer", []int{0, 2, 1, 2, 2}},
 		{"seers", "ulcer", []int{0, 1, 0, 1, 0}},
+		{"seers", "ulcee", []int{0, 1, 1, 0, 0}},
+		{"seerse", "elceec", []int{0, 1, 1, 0, 0, 1}},
 	}
 )
 
