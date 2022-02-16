@@ -96,7 +96,7 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var finalState battleword.Game
+	var finalState battleword.Match
 	err := json.NewDecoder(r.Body).Decode(&finalState)
 	if err != nil {
 		log.Println(err)
