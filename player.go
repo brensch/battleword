@@ -2,6 +2,7 @@ package battleword
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -46,6 +47,17 @@ type PlayerGameState struct {
 
 func InitPlayer(name, description, uri string) *Player {
 	id := uuid.New()
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			// odds are someone will be hosting this jankily.
+			// the ramifications of a mitm attack are 0
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		// need to think about setting this dynamically for humans
+		Timeout: 5 * time.Minute,
+	}
+
 	return &Player{
 		Definition: PlayerDefinition{
 			ID:          id.String(),
@@ -53,7 +65,8 @@ func InitPlayer(name, description, uri string) *Player {
 			Description: description,
 		},
 		connection: &PlayerConnection{
-			uri: uri,
+			uri:    uri,
+			client: client,
 		},
 	}
 }
@@ -164,8 +177,7 @@ func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 		return nil, err
 	}
 
-	// TODO: make this a proper client
-	res, err := http.DefaultClient.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -193,8 +205,7 @@ func (p *Player) BroadcastMatch(m *Match) error {
 		return err
 	}
 
-	// TODO: make this a proper client
-	res, err := http.DefaultClient.Do(req)
+	res, err := p.connection.client.Do(req)
 	if err != nil {
 		return err
 	}
