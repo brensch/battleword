@@ -180,3 +180,28 @@ func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 
 	return guess, nil
 }
+
+func (p *Player) BroadcastMatch(m *Match) error {
+
+	matchJSON, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/results", p.connection.uri), bytes.NewReader(matchJSON))
+	if err != nil {
+		return err
+	}
+
+	// TODO: make this a proper client
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	res.Body.Close()
+
+	// we don't care about hearing back from the solver. it's really just us sending them the info.
+	return nil
+
+}

@@ -1,6 +1,7 @@
 package battleword
 
 import (
+	"log"
 	"sync"
 	"time"
 )
@@ -50,8 +51,6 @@ func (m *Match) Start() {
 	}
 
 	wg.Wait()
-
-	// g.BroadcastResults()
 }
 
 type playerResult struct {
@@ -75,7 +74,6 @@ func (m *Match) PlayGame(g *Game) {
 	go func() {
 		defer wgResults.Done()
 		for result := range playerResultsCHAN {
-			// fmt.Println(result.Guesses)
 
 			if result.state.TotalTime < fastestTime {
 				results.Fastest = FastestPlayer{
@@ -115,6 +113,22 @@ func (m *Match) PlayGame(g *Game) {
 	results.End = time.Now()
 
 	g.Result = results
+}
 
-	// g.BroadcastResults()
+func (m *Match) Broadcast() {
+
+	var wg sync.WaitGroup
+
+	for _, player := range m.Players {
+		wg.Add(1)
+		go func(player *Player) {
+			defer wg.Done()
+			err := player.BroadcastMatch(m)
+			if err != nil {
+				log.Println(err)
+			}
+		}(player)
+	}
+
+	wg.Wait()
 }

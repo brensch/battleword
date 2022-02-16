@@ -60,6 +60,8 @@ func main() {
 
 	match.Start()
 
+	match.Broadcast()
+
 	log.Println("game finished")
 	gameJSON, _ := json.Marshal(match)
 	log.Println("final result:", string(gameJSON))
