@@ -296,12 +296,14 @@ func (p *Player) Summarise() {
 
 		if game.Correct {
 			totalGamesWon++
+		}
+
+		totalGuesses += len(game.Guesses)
+		if !game.Correct {
 			// add one if they didn't get it
 			// (otherwise someone who guessed in 6 is the same as someone who failed)
 			totalGuesses++
 		}
-
-		totalGuesses += len(game.Guesses)
 
 	}
 
