@@ -12,6 +12,7 @@ import (
 var (
 	NumRounds  = 6
 	NumLetters = 5
+	NumGames   = 3
 
 	PlayerURIsJoined = "http://localhost:8080"
 )
@@ -19,6 +20,7 @@ var (
 func init() {
 	flag.IntVar(&NumRounds, "num_rounds", NumRounds, "the number of rounds you want in each game")
 	flag.IntVar(&NumLetters, "num_letters", NumLetters, "the number of letters the word should be")
+	flag.IntVar(&NumGames, "num_games", NumGames, "how many games to play in the match")
 
 	flag.StringVar(&PlayerURIsJoined, "apis", PlayerURIsJoined, "the location of all players' apis in the same order as their names, separated by commas")
 
@@ -37,13 +39,7 @@ func main() {
 		return
 	}
 
-	// for i, name := range playerNames {
-	// 	battleword.InitPlayer(playerURIs[i])
-	// 	players = append(players, battleword.InitPlayer(playerURIs[i]))
-
-	// }
-
-	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, playerURIs, 5, 6, 100)
+	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, playerURIs, NumLetters, NumRounds, NumGames)
 	if err != nil {
 		log.Println("got error initing game", err)
 		return
