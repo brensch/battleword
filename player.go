@@ -163,12 +163,12 @@ func (s *PlayerGameState) DoMove(c *PlayerConnection, answer string) (bool, erro
 		return false, err
 	}
 
+	s.Times = append(s.Times, time.Since(start))
+
 	err = s.RecordGuess(guess, answer)
 	if err != nil {
 		return false, err
 	}
-
-	s.Times = append(s.Times, time.Since(start))
 
 	correct := false
 	if guess.Guess == answer {
