@@ -32,6 +32,7 @@ func main() {
 
 	http.HandleFunc("/guess", DoGuess)
 	http.HandleFunc("/results", ReceiveResults)
+	http.HandleFunc("/ping", DoPing)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
 		log.Println(err)
@@ -84,6 +85,26 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 	// time.Sleep(1 * time.Second)
 
 	err = json.NewEncoder(w).Encode(guess)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func DoPing(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		return
+	}
+
+	log.Println("received ping")
+
+	definition := &battleword.PlayerDefinition{
+		Name:        "solvo",
+		Description: "the magnificent",
+	}
+
+	err := json.NewEncoder(w).Encode(definition)
 	if err != nil {
 		log.Println(err)
 		return

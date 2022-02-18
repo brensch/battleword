@@ -13,14 +13,28 @@ import (
 )
 
 type Player struct {
-	Definition PlayerDefinition   `json:"definition,omitempty"`
+	ID         string             `json:"id,omitempty"`
+	Definition *PlayerDefinition  `json:"definition,omitempty"`
 	Games      []*PlayerGameState `json:"state,omitempty"`
+
+	Summary *PlayerSummary `json:"player_summary,omitempty"`
+
+	FailedToFinish bool `json:"failed_to_finish,omitempty"`
 
 	connection *PlayerConnection
 }
 
+type PlayerSummary struct {
+	TotalTime      time.Duration `json:"total_time,omitempty"`
+	TotalGuesses   int           `json:"total_guesses"`
+	AverageGuesses float64       `json:"average_guesses,omitempty"`
+	GamesWon       int           `json:"games_won"`
+	TotalVolume    float64       `json:"total_volume,omitempty"`
+
+	Disqualified bool `json:"disqualified"`
+}
+
 type PlayerDefinition struct {
-	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 }
@@ -39,14 +53,16 @@ type PlayerGameState struct {
 
 	Guesses []string `json:"guesses,omitempty"`
 	Results [][]int  `json:"results,omitempty"`
-	Shouts  []string `json:"shouts,omitempty"`
+	Correct bool     `json:"correct"`
+	Error   bool     `json:"error,omitempty"`
+
+	shouts []string
 
 	Times     []time.Duration `json:"times,omitempty"`
 	TotalTime time.Duration   `json:"total_time,omitempty"`
 }
 
-func InitPlayer(name, description, uri string) *Player {
-	id := uuid.New()
+func InitPlayer(uri string) (*Player, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -55,20 +71,39 @@ func InitPlayer(name, description, uri string) *Player {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 		// need to think about setting this dynamically for humans
-		Timeout: 5 * time.Minute,
+		Timeout: 500 * time.Millisecond,
+	}
+
+	c := &PlayerConnection{
+		uri:    uri,
+		client: client,
+	}
+
+	// we want the GetDefinition call to be the thing that wakes an api up if people are hosting
+	// serverless. so give them a few retries just in case
+
+	var definition *PlayerDefinition
+	var err error
+	for i := 0; i < 5; i++ {
+
+		definition, err = GetDefinition(c)
+		if err != nil {
+			log.Printf("error getting definitions from player %s: %+v", uri, err)
+			continue
+		}
+
+		break
+	}
+
+	if definition == nil {
+		return nil, fmt.Errorf("failed to retrieve definition from player: %+v", err)
 	}
 
 	return &Player{
-		Definition: PlayerDefinition{
-			ID:          id.String(),
-			Name:        name,
-			Description: description,
-		},
-		connection: &PlayerConnection{
-			uri:    uri,
-			client: client,
-		},
-	}
+		ID:         uuid.New().String(),
+		connection: c,
+		Definition: definition,
+	}, nil
 }
 
 func (p *Player) PlayGame(g *Game) *PlayerGameState {
@@ -84,18 +119,20 @@ func (p *Player) PlayGame(g *Game) *PlayerGameState {
 
 }
 
-func (s *PlayerGameState) PlayGame(c *PlayerConnection, d PlayerDefinition, g *Game) {
+func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *Game) {
 
-	var correct bool
-	var err error
+	// var correct bool
+	// var err error
 
 	for {
-		correct, err = s.DoMove(c, g.Answer)
+		correct, err := s.DoMove(c, g.Answer)
 		if err != nil {
+			s.Error = true
 			break
 		}
 
 		if correct {
+			s.Correct = true
 			break
 		}
 
@@ -109,12 +146,12 @@ func (s *PlayerGameState) PlayGame(c *PlayerConnection, d PlayerDefinition, g *G
 		s.TotalTime += guessTime
 	}
 
-	finished := "finished"
-	if !correct {
-		finished = "couldn't quite get it"
-	}
+	// finished := "finished"
+	// if !correct {
+	// 	finished = "couldn't quite get it"
+	// }
 
-	log.Printf("%s %s in %d turns and %d milliseconds\n", d.Name, finished, len(s.Guesses), s.TotalTime.Milliseconds())
+	// log.Printf("%s %s in %d turns and %d milliseconds\n", d.Name, finished, len(s.Guesses), s.TotalTime.Milliseconds())
 }
 
 func (s *PlayerGameState) DoMove(c *PlayerConnection, answer string) (bool, error) {
@@ -153,7 +190,7 @@ func (s *PlayerGameState) RecordGuess(guess *Guess, answer string) error {
 	s.Results = append(s.Results, result)
 
 	// TODO: also implement shouter to send shouts to everyone.
-	s.Shouts = append(s.Shouts, guess.Shout)
+	s.shouts = append(s.shouts, guess.Shout)
 
 	return nil
 }
@@ -214,5 +251,65 @@ func (p *Player) BroadcastMatch(m *Match) error {
 
 	// we don't care about hearing back from the solver. it's really just us sending them the info.
 	return nil
+
+}
+
+func GetDefinition(c *PlayerConnection) (*PlayerDefinition, error) {
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/ping", c.uri), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	var definition *PlayerDefinition
+	err = json.NewDecoder(res.Body).Decode(&definition)
+	if err != nil {
+		return nil, err
+	}
+
+	return definition, nil
+}
+
+func (p *Player) Summarise() {
+
+	var totalTime time.Duration
+	var totalGuesses, totalGamesWon int
+
+	for _, game := range p.Games {
+
+		if game.Error {
+			p.Summary = &PlayerSummary{
+				Disqualified: true,
+			}
+			return
+		}
+		for _, guessTime := range game.Times {
+			totalTime += guessTime
+		}
+
+		if game.Correct {
+			totalGamesWon++
+			// add one if they didn't get it
+			// (otherwise someone who guessed in 6 is the same as someone who failed)
+			totalGuesses++
+		}
+
+		totalGuesses += len(game.Guesses)
+
+	}
+
+	p.Summary = &PlayerSummary{
+		TotalTime:      totalTime,
+		TotalGuesses:   totalGuesses,
+		AverageGuesses: float64(totalGuesses) / float64(len(p.Games)),
+		GamesWon:       totalGamesWon,
+	}
 
 }

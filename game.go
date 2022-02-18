@@ -11,34 +11,19 @@ type Game struct {
 	ID     string `json:"id,omitempty"`
 	Answer string `json:"answer,omitempty"`
 
-	Result *GameResult `json:"result,omitempty"`
+	Summary *GameSummary `json:"summary,omitempty"`
 
 	numLetters int
 	numRounds  int
 }
 
-type GameResult struct {
+type GameSummary struct {
 	Start time.Time `json:"start,omitempty"`
 	End   time.Time `json:"end,omitempty"`
 
-	Fastest      FastestPlayer      `json:"fastest,omitempty"`
-	MostAccurate MostAccuratePlayer `json:"most_accurate,omitempty"`
-	Loudest      LoudestPlayer      `json:"loudest,omitempty"`
-}
-
-type FastestPlayer struct {
-	Player PlayerDefinition `json:"player,omitempty"`
-	Time   time.Duration    `json:"time,omitempty"`
-}
-
-type MostAccuratePlayer struct {
-	Player             PlayerDefinition `json:"player,omitempty"`
-	AverageGuessLength float64          `json:"average_guess_length,omitempty"`
-}
-
-type LoudestPlayer struct {
-	Player PlayerDefinition `json:"player,omitempty"`
-	Volume float64          `json:"volume,omitempty"`
+	Fastest      Fastest      `json:"fastest,omitempty"`
+	MostAccurate MostAccurate `json:"most_accurate,omitempty"`
+	Loudest      Loudest      `json:"loudest,omitempty"`
 }
 
 func InitGame(commonWords []string, numLetters, numRounds int) *Game {

@@ -7,11 +7,20 @@ import (
 
 func TestMatchInit(t *testing.T) {
 
-	players := []*Player{
-		InitPlayer("brendan", "a cool guy", "http://localhost:8080"),
+	playerURIs := []string{
+		"http://localhost:8080",
 	}
 
-	match, err := InitMatch(AllWords, CommonWords, players, 5, 6, 10)
+	// players := []*Player{
+	// 	{
+	// 		Definition: &PlayerDefinition{"", "brend", ""},
+	// 		connection: &PlayerConnection{
+	// 			uri:    "http://localhost:8080",
+	// 			client: http.DefaultClient,
+	// 		},
+	// 	}}
+
+	match, err := InitMatch(AllWords, CommonWords, playerURIs, 5, 6, 10)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -24,11 +33,20 @@ func TestMatchInit(t *testing.T) {
 
 func TestMatchStart(t *testing.T) {
 
-	players := []*Player{
-		InitPlayer("brendan", "a cool guy", "http://localhost:8080"),
+	playerURIs := []string{
+		"http://localhost:8080",
 	}
+	// players := []*Player{
+	// 	{
+	// 		Definition: &PlayerDefinition{"", "brend", ""},
+	// 		connection: &PlayerConnection{
+	// 			uri:    "http://localhost:8080",
+	// 			client: http.DefaultClient,
+	// 		},
+	// 	},
+	// }
 
-	match, err := InitMatch(AllWords, CommonWords, players, 5, 6, 10)
+	match, err := InitMatch(AllWords, CommonWords, playerURIs, 5, 6, 10)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
