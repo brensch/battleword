@@ -17,7 +17,7 @@ type Match struct {
 	commonWords []string
 }
 
-// get players
+// InitMatch generates all the games for the match and populates player information and other match level metadata
 func InitMatch(allWords, commonWords []string, players []*Player, numLetters, numRounds, numGames int) (*Match, error) {
 
 	games := make([]*Game, numGames)
@@ -38,6 +38,7 @@ func InitMatch(allWords, commonWords []string, players []*Player, numLetters, nu
 
 }
 
+// Start kicks off all the games as goroutines and waits for them to complete
 func (m *Match) Start() {
 
 	var wg sync.WaitGroup
@@ -58,6 +59,10 @@ type playerResult struct {
 	player PlayerDefinition
 }
 
+// PlayGame takes one of the games for a match and sends it to all players.
+// as players finish their games, they are sent back on a channel to be summarised.
+// overall results are calculated as each players individual results arrive to
+// avoid having an extra loop through all player results once they're all finished.
 func (m *Match) PlayGame(g *Game) {
 
 	var wgGames, wgResults sync.WaitGroup
@@ -70,6 +75,7 @@ func (m *Match) PlayGame(g *Game) {
 	fastestTime := 100 * time.Hour
 	bestAccuracy := m.numRounds + 1
 
+	// listen for the results
 	wgResults.Add(1)
 	go func() {
 		defer wgResults.Done()
@@ -94,6 +100,7 @@ func (m *Match) PlayGame(g *Game) {
 		}
 	}()
 
+	// play the games
 	for _, player := range m.Players {
 		wgGames.Add(1)
 		go func(player *Player) {
@@ -106,15 +113,16 @@ func (m *Match) PlayGame(g *Game) {
 		}(player)
 	}
 
+	// wait for games and results
 	wgGames.Wait()
 	close(playerResultsCHAN)
-
 	wgResults.Wait()
 	results.End = time.Now()
 
 	g.Result = results
 }
 
+// Broadcast takes the results of the match and sends it to all players
 func (m *Match) Broadcast() {
 
 	var wg sync.WaitGroup
