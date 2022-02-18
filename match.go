@@ -10,6 +10,8 @@ type Match struct {
 	Players []*Player `json:"players,omitempty"`
 	Games   []*Game   `json:"games,omitempty"`
 
+	Summary *MatchSummary `json:"summary,omitempty"`
+
 	numRounds  int
 	numLetters int
 
@@ -17,13 +19,56 @@ type Match struct {
 	commonWords []string
 }
 
+type MatchSummary struct {
+	Fastest      Fastest      `json:"fastest,omitempty"`
+	MostAccurate MostAccurate `json:"most_accurate,omitempty"`
+	Loudest      Loudest      `json:"loudest,omitempty"`
+	MostCorrect  MostCorrect  `json:"most_correct,omitempty"`
+
+	GamesFastest      MostGames `json:"games_fastest,omitempty"`
+	GamesLoudest      MostGames `json:"games_loudest,omitempty"`
+	GamesMostAccurate MostGames `json:"games_most_accurate,omitempty"`
+}
+
 // InitMatch generates all the games for the match and populates player information and other match level metadata
-func InitMatch(allWords, commonWords []string, players []*Player, numLetters, numRounds, numGames int) (*Match, error) {
+func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
 
 	games := make([]*Game, numGames)
 	for i := 0; i < numGames; i++ {
 		games[i] = InitGame(commonWords, numLetters, numRounds)
 	}
+
+	var wgGenerate, wgListen sync.WaitGroup
+	playerCHAN := make(chan *Player)
+	var players []*Player
+
+	wgListen.Add(1)
+	go func() {
+		defer wgListen.Done()
+		for player := range playerCHAN {
+			players = append(players, player)
+
+		}
+	}()
+
+	for _, playerURI := range playerURIs {
+		wgGenerate.Add(1)
+		go func(playerURI string) {
+			defer wgGenerate.Done()
+			player, err := InitPlayer(playerURI)
+			if err != nil {
+				log.Printf("player %s failed to respond: %+v", playerURI, err)
+				return
+			}
+
+			playerCHAN <- player
+
+		}(playerURI)
+	}
+
+	wgGenerate.Wait()
+	close(playerCHAN)
+	wgListen.Wait()
 
 	return &Match{
 		Players: players,
@@ -55,8 +100,8 @@ func (m *Match) Start() {
 }
 
 type playerResult struct {
-	state  *PlayerGameState
-	player PlayerDefinition
+	state    *PlayerGameState
+	playerID string
 }
 
 // PlayGame takes one of the games for a match and sends it to all players.
@@ -68,33 +113,44 @@ func (m *Match) PlayGame(g *Game) {
 	var wgGames, wgResults sync.WaitGroup
 	playerResultsCHAN := make(chan playerResult)
 
-	results := &GameResult{
+	summary := &GameSummary{
 		Start: time.Now(),
 	}
 
 	fastestTime := 100 * time.Hour
 	bestAccuracy := m.numRounds + 1
+	// this tracks if it's a tie since it's easy for multiple players to guess in the same number of rounds
+	playersWithSameBestAccuracy := 0
 
-	// listen for the results
+	// listen for the summary
 	wgResults.Add(1)
 	go func() {
 		defer wgResults.Done()
 		for result := range playerResultsCHAN {
 
 			if result.state.TotalTime < fastestTime {
-				results.Fastest = FastestPlayer{
-					Player: result.player,
-					Time:   result.state.TotalTime,
+				summary.Fastest = Fastest{
+					PlayerID: result.playerID,
+					Time:     result.state.TotalTime,
 				}
 				fastestTime = result.state.TotalTime
 			}
 
-			if len(result.state.Guesses) < bestAccuracy {
-				results.MostAccurate = MostAccuratePlayer{
-					Player:             result.player,
-					AverageGuessLength: float64(len(result.state.Guesses)),
+			numGuesses := len(result.state.Guesses)
+			if !result.state.Correct {
+				numGuesses++
+			}
+			if numGuesses == bestAccuracy {
+				playersWithSameBestAccuracy++
+			}
+
+			if numGuesses < bestAccuracy {
+				summary.MostAccurate = MostAccurate{
+					PlayerID:           result.playerID,
+					AverageGuessLength: float64(numGuesses),
 				}
-				bestAccuracy = len(result.state.Guesses)
+				bestAccuracy = numGuesses
+				playersWithSameBestAccuracy = 0
 			}
 
 		}
@@ -107,19 +163,23 @@ func (m *Match) PlayGame(g *Game) {
 			defer wgGames.Done()
 			state := player.PlayGame(g)
 			playerResultsCHAN <- playerResult{
-				state:  state,
-				player: player.Definition,
+				state:    state,
+				playerID: player.ID,
 			}
 		}(player)
 	}
 
-	// wait for games and results
+	// wait for games and summary
 	wgGames.Wait()
 	close(playerResultsCHAN)
 	wgResults.Wait()
-	results.End = time.Now()
+	summary.End = time.Now()
 
-	g.Result = results
+	if playersWithSameBestAccuracy > 0 {
+		summary.MostAccurate = MostAccurate{}
+	}
+
+	g.Summary = summary
 }
 
 // Broadcast takes the results of the match and sends it to all players
@@ -139,4 +199,84 @@ func (m *Match) Broadcast() {
 	}
 
 	wg.Wait()
+}
+
+// Summarise aggregates statistics across the whole match
+func (m *Match) Summarise() {
+
+	fastest := Fastest{Time: 100 * time.Hour}
+	mostAccurate := MostAccurate{AverageGuessLength: 11}
+	var mostCorrect MostCorrect
+	var loudest Loudest
+
+	for _, player := range m.Players {
+		player.Summarise()
+		if player.Summary.Disqualified {
+			continue
+		}
+
+		if player.Summary.AverageGuesses < mostAccurate.AverageGuessLength {
+			mostAccurate.AverageGuessLength = player.Summary.AverageGuesses
+			mostAccurate.PlayerID = player.ID
+		}
+
+		if player.Summary.TotalTime < fastest.Time {
+			fastest.Time = player.Summary.TotalTime
+			fastest.PlayerID = player.ID
+		}
+
+		if player.Summary.GamesWon > mostCorrect.CorrectGames {
+			mostCorrect.CorrectGames = player.Summary.GamesWon
+			mostCorrect.PlayerID = player.ID
+		}
+
+		if player.Summary.TotalVolume > loudest.Volume {
+			loudest.Volume = player.Summary.TotalVolume
+			loudest.PlayerID = player.ID
+		}
+	}
+
+	gamesFastestTally := make(map[string]int)
+	gamesLoudestTally := make(map[string]int)
+	gamesMostAccurateTally := make(map[string]int)
+
+	for _, game := range m.Games {
+		gamesFastestTally[game.Summary.Fastest.PlayerID]++
+		gamesLoudestTally[game.Summary.Loudest.PlayerID]++
+		gamesMostAccurateTally[game.Summary.MostAccurate.PlayerID]++
+	}
+
+	var gamesFastest, gamesLoudest, gamesMostAccurate MostGames
+
+	for playerID, gameCount := range gamesFastestTally {
+		if gameCount > gamesFastest.Count {
+			gamesFastest.PlayerID = playerID
+			gamesFastest.Count = gameCount
+		}
+	}
+
+	for playerID, gameCount := range gamesLoudestTally {
+		if gameCount > gamesLoudest.Count && playerID != "" {
+			gamesLoudest.PlayerID = playerID
+			gamesLoudest.Count = gameCount
+		}
+	}
+
+	for playerID, gameCount := range gamesMostAccurateTally {
+		if gameCount > gamesMostAccurate.Count {
+			gamesMostAccurate.PlayerID = playerID
+			gamesMostAccurate.Count = gameCount
+		}
+	}
+
+	m.Summary = &MatchSummary{
+		Loudest:      loudest,
+		MostAccurate: mostAccurate,
+		MostCorrect:  mostCorrect,
+		Fastest:      fastest,
+
+		GamesFastest:      gamesFastest,
+		GamesLoudest:      gamesLoudest,
+		GamesMostAccurate: gamesMostAccurate,
+	}
 }
