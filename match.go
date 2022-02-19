@@ -100,8 +100,8 @@ func (m *Match) Start() {
 }
 
 type playerResult struct {
-	state    *PlayerGameState
-	playerID string
+	state  *PlayerGameState
+	player *Player
 }
 
 // PlayGame takes one of the games for a match and sends it to all players.
@@ -128,9 +128,15 @@ func (m *Match) PlayGame(g *Game) {
 		defer wgResults.Done()
 		for result := range playerResultsCHAN {
 
+			// append game to player here since it's serialised across goroutines
+			result.player.mu.Lock()
+			result.player.Games = append(result.player.Games, result.state)
+			result.player.mu.Unlock()
+
+			// then perform all calculations across all the players for this particular game
 			if result.state.TotalTime < fastestTime {
 				summary.Fastest = Fastest{
-					PlayerID: result.playerID,
+					PlayerID: result.player.ID,
 					Time:     result.state.TotalTime,
 				}
 				fastestTime = result.state.TotalTime
@@ -146,7 +152,7 @@ func (m *Match) PlayGame(g *Game) {
 
 			if numGuesses < bestAccuracy {
 				summary.MostAccurate = MostAccurate{
-					PlayerID:           result.playerID,
+					PlayerID:           result.player.ID,
 					AverageGuessLength: float64(numGuesses),
 				}
 				bestAccuracy = numGuesses
@@ -163,8 +169,8 @@ func (m *Match) PlayGame(g *Game) {
 			defer wgGames.Done()
 			state := player.PlayGame(g)
 			playerResultsCHAN <- playerResult{
-				state:    state,
-				playerID: player.ID,
+				state:  state,
+				player: player,
 			}
 		}(player)
 	}

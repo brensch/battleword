@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,6 +23,8 @@ type Player struct {
 	FailedToFinish bool `json:"failed_to_finish,omitempty"`
 
 	connection *PlayerConnection
+
+	mu sync.Mutex
 }
 
 type PlayerSummary struct {
@@ -77,6 +80,8 @@ func InitPlayer(uri string) (*Player, error) {
 	c := &PlayerConnection{
 		uri:    uri,
 		client: client,
+
+		concurrentConnectionLimiter: make(chan struct{}, 100),
 	}
 
 	// we want the GetDefinition call to be the thing that wakes an api up if people are hosting
@@ -111,8 +116,6 @@ func (p *Player) PlayGame(g *Game) *PlayerGameState {
 		GameID: g.ID,
 	}
 
-	p.Games = append(p.Games, gameState)
-
 	gameState.PlayGame(p.connection, p.Definition, g)
 
 	return gameState
@@ -120,9 +123,6 @@ func (p *Player) PlayGame(g *Game) *PlayerGameState {
 }
 
 func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *Game) {
-
-	// var correct bool
-	// var err error
 
 	for {
 		correct, err := s.DoMove(c, g.Answer)
@@ -146,24 +146,16 @@ func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *
 		s.TotalTime += guessTime
 	}
 
-	// finished := "finished"
-	// if !correct {
-	// 	finished = "couldn't quite get it"
-	// }
-
-	// log.Printf("%s %s in %d turns and %d milliseconds\n", d.Name, finished, len(s.Guesses), s.TotalTime.Milliseconds())
 }
 
 func (s *PlayerGameState) DoMove(c *PlayerConnection, answer string) (bool, error) {
-
-	start := time.Now()
 
 	guess, err := s.GetGuess(c)
 	if err != nil {
 		return false, err
 	}
 
-	s.Times = append(s.Times, time.Since(start))
+	s.Times = append(s.Times, guess.time)
 
 	err = s.RecordGuess(guess, answer)
 	if err != nil {
@@ -200,6 +192,8 @@ type Guess struct {
 
 	// For the lols:
 	Shout string `json:"shout,omitempty"`
+
+	time time.Duration
 }
 
 func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
@@ -214,10 +208,16 @@ func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 		return nil, err
 	}
 
+	// wait for a channel to free up for this player
+	c.concurrentConnectionLimiter <- struct{}{}
+	defer func() { <-c.concurrentConnectionLimiter }()
+
+	start := time.Now()
 	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	guessDuration := time.Since(start)
 
 	defer res.Body.Close()
 
@@ -226,6 +226,8 @@ func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	guess.time = guessDuration
 
 	return guess, nil
 }
