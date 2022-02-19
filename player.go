@@ -230,9 +230,20 @@ func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 	return guess, nil
 }
 
+// this struct includes the player's id to give them certainty about who they were
+type PlayerMatchResults struct {
+	PlayerID string `json:"player_id,omitempty"`
+	Results  *Match `json:"results,omitempty"`
+}
+
 func (p *Player) BroadcastMatch(m *Match) error {
 
-	matchJSON, err := json.Marshal(m)
+	results := PlayerMatchResults{
+		PlayerID: p.ID,
+		Results:  m,
+	}
+
+	matchJSON, err := json.Marshal(results)
 	if err != nil {
 		return err
 	}
