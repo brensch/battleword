@@ -129,8 +129,9 @@ func (m *Match) PlayGame(g *Game) {
 		for result := range playerResultsCHAN {
 
 			// append game to player here since it's serialised across goroutines
-			// (avoids need for mutex)
+			result.player.mu.Lock()
 			result.player.Games = append(result.player.Games, result.state)
+			result.player.mu.Unlock()
 
 			// then perform all calculations across all the players for this particular game
 			if result.state.TotalTime < fastestTime {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,6 +23,8 @@ type Player struct {
 	FailedToFinish bool `json:"failed_to_finish,omitempty"`
 
 	connection *PlayerConnection
+
+	mu sync.Mutex
 }
 
 type PlayerSummary struct {
