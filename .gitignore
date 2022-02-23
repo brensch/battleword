@@ -15,3 +15,7 @@
 # vendor/
 
 dist/
+
+# game results
+# TODO: make this more specific
+*.json
