@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/brensch/battleword"
 )
@@ -39,6 +42,14 @@ func main() {
 		return
 	}
 
+	filename := fmt.Sprintf("results-%s.json", time.Now().Format(time.RFC3339))
+	f, err := os.Create(filename)
+	if err != nil {
+		log.Println("couldn't create file", filename)
+		return
+	}
+	defer f.Close()
+
 	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, playerURIs, NumLetters, NumRounds, NumGames)
 	if err != nil {
 		log.Println("got error initing game", err)
@@ -50,7 +61,14 @@ func main() {
 	match.Broadcast()
 
 	log.Println("game finished")
-	gameJSON, _ := json.Marshal(match)
-	log.Println("final result:", string(gameJSON))
+	// gameJSON, _ := json.Marshal(match)
+
+	err = json.NewEncoder(f).Encode(match)
+	if err != nil {
+		log.Println("couldn't write to file", err)
+		return
+	}
+
+	log.Println("final result saved to file", filename)
 
 }
