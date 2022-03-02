@@ -74,7 +74,7 @@ func InitPlayer(uri string) (*Player, error) {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 		// need to think about setting this dynamically for humans
-		Timeout: 500 * time.Millisecond,
+		Timeout: 500 * time.Second,
 	}
 
 	c := &PlayerConnection{
