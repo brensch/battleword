@@ -5,14 +5,11 @@ on:
     branches: [ api/dev ]
 
 jobs:
-  cloud-run-deploy:
-
+  deploy-dev:
     runs-on: ubuntu-latest
-
     permissions:
       contents: 'read'
       id-token: 'write'
-
     steps:
     - id: 'checkout'
       uses: actions/checkout@v2
