@@ -272,3 +272,35 @@ goreleaser release --snapshot --rm-dist
 ```
 
 `GITHUB_TOKEN` is a standard PAT from github and needs to be set to upload.
+
+### identity federation
+
+to allow a github project to use gcloud resources:
+
+setup pool:
+```bash
+gcloud iam workload-identity-pools create "github-pool" \
+  --project="battleword" \
+  --location="global" \
+  --display-name="github-pool"
+```
+
+setup workload
+```bash
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+  --project="battleword" \
+  --location="global" \
+  --workload-identity-pool="github-pool" \
+  --display-name="github-provider" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.aud=assertion.aud,attribute.repository=assertion.repository" \
+  --issuer-uri="https://token.actions.githubusercontent.com"
+```
+
+allow the identity provider to impersonate the service account
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding "github@battleword.iam.gserviceaccount.com" \
+  --project="battleword" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/339690027814/locations/global/workloadIdentityPools/github-pool/attribute.repository/brensch/battleword"
+```
