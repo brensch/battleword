@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/brensch/battleword"
@@ -32,7 +31,9 @@ func handleStartMatch(c *gin.Context) {
 
 	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, req.Players, req.Letters, 6, req.Games)
 	if err != nil {
-		log.Println("got error initing game", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
