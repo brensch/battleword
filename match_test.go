@@ -1,8 +1,13 @@
 package battleword
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+)
+
+var (
+	gameCount = 10
 )
 
 func TestMatchInit(t *testing.T) {
@@ -20,14 +25,16 @@ func TestMatchInit(t *testing.T) {
 	// 		},
 	// 	}}
 
-	match, err := InitMatch(AllWords, CommonWords, playerURIs, 5, 6, 10)
+	match, err := InitMatch(logrus.New(), AllWords, CommonWords, playerURIs, 5, 6, gameCount)
 	if err != nil {
 		t.Log(err)
-		t.FailNow()
+		t.Skip()
+		return
 	}
 
-	for _, game := range match.Games {
-		fmt.Println(game.Answer)
+	if len(match.Games) != gameCount {
+		t.Log("wrong game count", len(match.Games), gameCount)
+		t.FailNow()
 	}
 }
 
@@ -46,10 +53,11 @@ func TestMatchStart(t *testing.T) {
 	// 	},
 	// }
 
-	match, err := InitMatch(AllWords, CommonWords, playerURIs, 5, 6, 10)
+	match, err := InitMatch(logrus.New(), AllWords, CommonWords, playerURIs, 5, 6, gameCount)
 	if err != nil {
 		t.Log(err)
-		t.FailNow()
+		t.Skip()
+		return
 	}
 
 	match.Start()
