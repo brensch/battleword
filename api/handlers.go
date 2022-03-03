@@ -14,6 +14,11 @@ type StartMatchRequest struct {
 	Players []string `json:"players,omitempty"`
 }
 
+type StartMatchResponse struct {
+	UUID    string                         `json:"uuid,omitempty"`
+	Players []*battleword.PlayerDefinition `json:"players,omitempty"`
+}
+
 func handleStartMatch(c *gin.Context) {
 
 	var req StartMatchRequest
@@ -31,12 +36,20 @@ func handleStartMatch(c *gin.Context) {
 		return
 	}
 
-	// TODO: obviously needs to be backgrounded, written to firestore etc.
-	match.Start()
-	match.Summarise()
-	match.Broadcast()
+	// background match calls here. they will handle updating firestore internally.
+	go func() {
+		match.Start()
+		match.Summarise()
+		match.Broadcast()
+	}()
 
-	c.JSON(200, gin.H{
-		"message": "pong",
+	var playerDefinitions []*battleword.PlayerDefinition
+	for _, player := range match.Players {
+		playerDefinitions = append(playerDefinitions, player.Definition)
+	}
+
+	c.JSON(200, StartMatchResponse{
+		UUID:    match.UUID,
+		Players: playerDefinitions,
 	})
 }
