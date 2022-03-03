@@ -261,9 +261,6 @@ func (m *Match) Summarise() {
 
 	for _, player := range m.Players {
 		player.Summarise()
-		if player.Summary.Disqualified {
-			continue
-		}
 
 		if player.Summary.AverageGuesses < mostAccurate.AverageGuessLength {
 			mostAccurate.AverageGuessLength = player.Summary.AverageGuesses
