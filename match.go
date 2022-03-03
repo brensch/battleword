@@ -1,6 +1,7 @@
 package battleword
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -43,7 +44,9 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 
 	var wgGenerate, wgListen sync.WaitGroup
 	playerCHAN := make(chan *Player)
+	errCHAN := make(chan error)
 	var players []*Player
+	var errors []error
 
 	wgListen.Add(1)
 	go func() {
@@ -54,6 +57,14 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 		}
 	}()
 
+	wgListen.Add(1)
+	go func() {
+		defer wgListen.Done()
+		for err := range errCHAN {
+			errors = append(errors, err)
+		}
+	}()
+
 	for _, playerURI := range playerURIs {
 		wgGenerate.Add(1)
 		go func(playerURI string) {
@@ -61,6 +72,7 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 			player, err := InitPlayer(playerURI)
 			if err != nil {
 				log.Printf("player %s failed to respond: %+v", playerURI, err)
+				errCHAN <- err
 				return
 			}
 
@@ -71,7 +83,12 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 
 	wgGenerate.Wait()
 	close(playerCHAN)
+	close(errCHAN)
 	wgListen.Wait()
+
+	if len(errors) > 0 {
+		return nil, fmt.Errorf("failed to contact %d players: %+v", len(errors), errors)
+	}
 
 	return &Match{
 		UUID: uuid.NewString(),
