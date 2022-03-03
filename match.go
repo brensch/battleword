@@ -4,9 +4,13 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Match struct {
+	UUID string `json:"uuid,omitempty"`
+
 	Players []*Player `json:"players,omitempty"`
 	Games   []*Game   `json:"games,omitempty"`
 
@@ -32,7 +36,6 @@ type MatchSummary struct {
 
 // InitMatch generates all the games for the match and populates player information and other match level metadata
 func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
-
 	games := make([]*Game, numGames)
 	for i := 0; i < numGames; i++ {
 		games[i] = InitGame(commonWords, numLetters, numRounds)
@@ -71,6 +74,8 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 	wgListen.Wait()
 
 	return &Match{
+		UUID: uuid.NewString(),
+
 		Players: players,
 		Games:   games,
 
