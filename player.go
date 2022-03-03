@@ -34,8 +34,6 @@ type PlayerSummary struct {
 	AverageGuesses float64       `json:"average_guesses,omitempty"`
 	GamesWon       int           `json:"games_won"`
 	TotalVolume    float64       `json:"total_volume,omitempty"`
-
-	Disqualified bool `json:"disqualified"`
 }
 
 type PlayerDefinition struct {
@@ -332,11 +330,9 @@ func (p *Player) Summarise() {
 	for _, game := range p.Games {
 
 		if game.Error != nil {
-			p.Summary = &PlayerSummary{
-				Disqualified: true,
-			}
-			return
+			continue
 		}
+
 		for _, guessTime := range game.Times {
 			totalTime += guessTime
 		}
