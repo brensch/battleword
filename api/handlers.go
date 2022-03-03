@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/brensch/battleword"
@@ -14,7 +13,12 @@ type StartMatchRequest struct {
 	Players []string `json:"players,omitempty"`
 }
 
-func handleStartMatch(c *gin.Context) {
+type StartMatchResponse struct {
+	UUID    string                         `json:"uuid,omitempty"`
+	Players []*battleword.PlayerDefinition `json:"players,omitempty"`
+}
+
+func (s *apiStore) handleStartMatch(c *gin.Context) {
 
 	var req StartMatchRequest
 	err := c.ShouldBindJSON(&req)
@@ -25,18 +29,28 @@ func handleStartMatch(c *gin.Context) {
 		return
 	}
 
-	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, req.Players, req.Letters, 6, req.Games)
+	match, err := battleword.InitMatch(s.log, battleword.AllWords, battleword.CommonWords, req.Players, req.Letters, 6, req.Games)
 	if err != nil {
-		log.Println("got error initing game", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	// TODO: obviously needs to be backgrounded, written to firestore etc.
-	match.Start()
-	match.Summarise()
-	match.Broadcast()
+	// background match calls here. they will handle updating firestore internally.
+	go func() {
+		match.Start()
+		match.Summarise()
+		match.Broadcast()
+	}()
 
-	c.JSON(200, gin.H{
-		"message": "pong",
+	var playerDefinitions []*battleword.PlayerDefinition
+	for _, player := range match.Players {
+		playerDefinitions = append(playerDefinitions, player.Definition)
+	}
+
+	c.JSON(200, StartMatchResponse{
+		UUID:    match.UUID,
+		Players: playerDefinitions,
 	})
 }

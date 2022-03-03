@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/brensch/battleword"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -33,7 +33,9 @@ func main() {
 
 	flag.Parse()
 
-	log.Printf("started game")
+	log := logrus.New()
+
+	log.Info("started game")
 
 	playerURIs := strings.Split(PlayerURIsJoined, ",")
 
@@ -50,7 +52,7 @@ func main() {
 	}
 	defer f.Close()
 
-	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, playerURIs, NumLetters, NumRounds, NumGames)
+	match, err := battleword.InitMatch(log, battleword.AllWords, battleword.CommonWords, playerURIs, NumLetters, NumRounds, NumGames)
 	if err != nil {
 		log.Println("got error initing game", err)
 		return
