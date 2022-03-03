@@ -18,7 +18,7 @@ type StartMatchResponse struct {
 	Players []*battleword.PlayerDefinition `json:"players,omitempty"`
 }
 
-func handleStartMatch(c *gin.Context) {
+func (s *apiStore) handleStartMatch(c *gin.Context) {
 
 	var req StartMatchRequest
 	err := c.ShouldBindJSON(&req)
@@ -29,7 +29,7 @@ func handleStartMatch(c *gin.Context) {
 		return
 	}
 
-	match, err := battleword.InitMatch(battleword.AllWords, battleword.CommonWords, req.Players, req.Letters, 6, req.Games)
+	match, err := battleword.InitMatch(s.log, battleword.AllWords, battleword.CommonWords, req.Players, req.Letters, 6, req.Games)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),

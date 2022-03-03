@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Match struct {
@@ -22,6 +23,8 @@ type Match struct {
 
 	allWords    []string
 	commonWords []string
+
+	log logrus.FieldLogger
 }
 
 type MatchSummary struct {
@@ -36,7 +39,10 @@ type MatchSummary struct {
 }
 
 // InitMatch generates all the games for the match and populates player information and other match level metadata
-func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
+func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
+	id := uuid.NewString()
+	log := parentLog.WithField("match_id", id)
+
 	games := make([]*Game, numGames)
 	for i := 0; i < numGames; i++ {
 		games[i] = InitGame(commonWords, numLetters, numRounds)
@@ -52,6 +58,11 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 	go func() {
 		defer wgListen.Done()
 		for player := range playerCHAN {
+			log.
+				WithFields(logrus.Fields{
+					"player_definition": player.Definition,
+				}).
+				Debug("got player info")
 			players = append(players, player)
 
 		}
@@ -69,9 +80,14 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 		wgGenerate.Add(1)
 		go func(playerURI string) {
 			defer wgGenerate.Done()
-			player, err := InitPlayer(playerURI)
+			player, err := InitPlayer(log, playerURI)
 			if err != nil {
-				log.Printf("player %s failed to respond: %+v", playerURI, err)
+				log.
+					WithFields(logrus.Fields{
+						"uri": playerURI,
+					}).
+					WithError(err).
+					Error("player failed to respond")
 				errCHAN <- err
 				return
 			}
@@ -91,7 +107,7 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 	}
 
 	return &Match{
-		UUID: uuid.NewString(),
+		UUID: id,
 
 		Players: players,
 		Games:   games,
@@ -101,12 +117,16 @@ func InitMatch(allWords, commonWords []string, playerURIs []string, numLetters, 
 
 		allWords:    allWords,
 		commonWords: commonWords,
+
+		log: log,
 	}, nil
 
 }
 
 // Start kicks off all the games as goroutines and waits for them to complete
 func (m *Match) Start() {
+
+	m.log.Info("match started")
 
 	var wg sync.WaitGroup
 
@@ -119,6 +139,8 @@ func (m *Match) Start() {
 	}
 
 	wg.Wait()
+	m.log.Info("match finished")
+
 }
 
 type playerResult struct {

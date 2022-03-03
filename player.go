@@ -5,12 +5,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Player struct {
@@ -24,7 +24,8 @@ type Player struct {
 
 	connection *PlayerConnection
 
-	mu sync.Mutex
+	mu  sync.Mutex
+	log logrus.FieldLogger
 }
 
 type PlayerSummary struct {
@@ -57,7 +58,7 @@ type PlayerGameState struct {
 	Guesses []string `json:"guesses,omitempty"`
 	Results [][]int  `json:"results,omitempty"`
 	Correct bool     `json:"correct"`
-	Error   bool     `json:"error,omitempty"`
+	Error   error    `json:"error,omitempty"`
 
 	shouts []string
 
@@ -65,7 +66,7 @@ type PlayerGameState struct {
 	TotalTime time.Duration   `json:"total_time,omitempty"`
 }
 
-func InitPlayer(uri string) (*Player, error) {
+func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -93,21 +94,35 @@ func InitPlayer(uri string) (*Player, error) {
 
 		definition, err = GetDefinition(c)
 		if err != nil {
-			log.Printf("error getting definitions from player %s: %+v", uri, err)
+			log.
+				WithFields(logrus.Fields{
+					"player_uri": uri,
+				}).
+				WithError(err).
+				Debug("failed attempt getting player definition")
 			continue
 		}
 
 		break
 	}
 
-	if definition == nil {
+	if err != nil {
+		log.
+			WithFields(logrus.Fields{
+				"player_uri": uri,
+			}).
+			WithError(err).
+			Error("failed to get player definition")
 		return nil, fmt.Errorf("failed to retrieve definition from player: %+v", err)
 	}
 
+	id := uuid.NewString()
 	return &Player{
-		ID:         uuid.New().String(),
+		ID:         id,
 		connection: c,
 		Definition: definition,
+
+		log: log.WithField("player_id", id),
 	}, nil
 }
 
@@ -116,18 +131,38 @@ func (p *Player) PlayGame(g *Game) *PlayerGameState {
 		GameID: g.ID,
 	}
 
+	p.log.
+		WithFields(logrus.Fields{
+			"game_id": g.ID,
+		}).
+		Debug("started game")
+
 	gameState.PlayGame(p.connection, p.Definition, g)
+
+	if gameState.Error != nil {
+		p.log.
+			WithFields(logrus.Fields{
+				"game_id": g.ID,
+			}).
+			WithError(gameState.Error).
+			Error("player had error during game")
+	}
+
+	p.log.
+		WithFields(logrus.Fields{
+			"game_id": g.ID,
+		}).
+		Debug("finished game")
 
 	return gameState
 
 }
 
 func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *Game) {
-
 	for {
 		correct, err := s.DoMove(c, g.Answer)
 		if err != nil {
-			s.Error = true
+			s.Error = err
 			break
 		}
 
@@ -145,7 +180,6 @@ func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *
 	for _, guessTime := range s.Times {
 		s.TotalTime += guessTime
 	}
-
 }
 
 func (s *PlayerGameState) DoMove(c *PlayerConnection, answer string) (bool, error) {
@@ -297,7 +331,7 @@ func (p *Player) Summarise() {
 
 	for _, game := range p.Games {
 
-		if game.Error {
+		if game.Error != nil {
 			p.Summary = &PlayerSummary{
 				Disqualified: true,
 			}

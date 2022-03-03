@@ -3,6 +3,8 @@ package battleword
 import (
 	"fmt"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TestMatchInit(t *testing.T) {
@@ -20,7 +22,7 @@ func TestMatchInit(t *testing.T) {
 	// 		},
 	// 	}}
 
-	match, err := InitMatch(AllWords, CommonWords, playerURIs, 5, 6, 10)
+	match, err := InitMatch(logrus.New(), AllWords, CommonWords, playerURIs, 5, 6, 10)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -46,7 +48,7 @@ func TestMatchStart(t *testing.T) {
 	// 	},
 	// }
 
-	match, err := InitMatch(AllWords, CommonWords, playerURIs, 5, 6, 10)
+	match, err := InitMatch(logrus.New(), AllWords, CommonWords, playerURIs, 5, 6, 10)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
