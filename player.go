@@ -50,15 +50,22 @@ type PlayerConnection struct {
 	concurrentConnectionLimiter chan struct{}
 }
 
+type GuessResult struct {
+	Guess  string
+	Result []int
+}
+
 type PlayerGameState struct {
 	GameID string `json:"game_id,omitempty"`
 
-	Guesses []string `json:"guesses,omitempty"`
-	Results [][]int  `json:"results,omitempty"`
-	Correct bool     `json:"correct"`
-	Error   error    `json:"error,omitempty"`
+	GuessResults []*GuessResult `json:"guess_results,omitempty"`
 
-	shouts []string
+	// Guesses []string `json:"guesses,omitempty"`
+	// Results [][]int  `json:"results,omitempty"`
+	Correct bool   `json:"correct,omitempty"`
+	Error   string `json:"error,omitempty"`
+
+	shouts []string `json:"shouts,omitempty"`
 
 	Times     []time.Duration `json:"times,omitempty"`
 	TotalTime time.Duration   `json:"total_time,omitempty"`
@@ -137,12 +144,12 @@ func (p *Player) PlayGame(g *Game) *PlayerGameState {
 
 	gameState.PlayGame(p.connection, p.Definition, g)
 
-	if gameState.Error != nil {
+	if gameState.Error != "" {
 		p.log.
 			WithFields(logrus.Fields{
 				"game_id": g.ID,
+				"error":   gameState.Error,
 			}).
-			WithError(gameState.Error).
 			Error("player had error during game")
 	}
 
@@ -160,7 +167,7 @@ func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *
 	for {
 		correct, err := s.DoMove(c, g.Answer)
 		if err != nil {
-			s.Error = err
+			s.Error = err.Error()
 			break
 		}
 
@@ -170,7 +177,7 @@ func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *
 		}
 
 		// https://i.redd.it/cw0cedsc93h81.jpg
-		if len(s.Guesses) == g.numRounds {
+		if len(s.GuessResults) == g.numRounds {
 			break
 		}
 	}
@@ -209,9 +216,10 @@ func (s *PlayerGameState) RecordGuess(guess *Guess, answer string) error {
 	}
 
 	result := GetResult(guess.Guess, answer)
+	s.GuessResults = append(s.GuessResults, result)
 
-	s.Guesses = append(s.Guesses, guess.Guess)
-	s.Results = append(s.Results, result)
+	// s.Guesses = append(s.Guesses, guess.Guess)
+	// s.Results = append(s.Results, result)
 
 	// TODO: also implement shouter to send shouts to everyone.
 	s.shouts = append(s.shouts, guess.Shout)
@@ -329,7 +337,7 @@ func (p *Player) Summarise() {
 
 	for _, game := range p.Games {
 
-		if game.Error != nil {
+		if game.Error != "" {
 			continue
 		}
 
@@ -341,7 +349,7 @@ func (p *Player) Summarise() {
 			totalGamesWon++
 		}
 
-		totalGuesses += len(game.Guesses)
+		totalGuesses += len(game.GuessResults)
 		if !game.Correct {
 			// add one if they didn't get it
 			// (otherwise someone who guessed in 6 is the same as someone who failed)
