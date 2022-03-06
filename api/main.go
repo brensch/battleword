@@ -58,7 +58,7 @@ func main() {
 	}
 
 	log := logrus.New()
-	log.SetLevel(logrus.DebugLevel)
+	log.SetLevel(logrus.InfoLevel)
 	log.SetFormatter(&logrus.JSONFormatter{
 		DisableTimestamp: false,
 		TimestampFormat:  time.RFC3339Nano,
