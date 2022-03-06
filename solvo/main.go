@@ -24,6 +24,8 @@ func init() {
 
 func main() {
 
+	flag.Parse()
+
 	log.Println("i am solvo the solver, the world's worst wordle player")
 	log.Println("waiting to receive a wordle")
 	log.Printf("listening on port %s", port)

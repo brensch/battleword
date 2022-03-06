@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/option"
 )
 
 const (
@@ -18,13 +24,32 @@ const (
 	EnvVarPort          = "PORT"
 
 	defaultPort = "8080"
+
+	FirestoreMatchCollection = "matches"
 )
 
 type apiStore struct {
-	log logrus.FieldLogger
+	log      logrus.FieldLogger
+	fsClient *firestore.Client
 }
 
 func main() {
+
+	// Use the application default credentials
+	ctx := context.Background()
+	conf := &firebase.Config{ProjectID: "battleword"}
+	opt := option.WithCredentialsFile("key.json")
+
+	app, err := firebase.NewApp(ctx, conf, opt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fsClient, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer fsClient.Close()
 
 	// using env var since cloud run uses it
 	port := os.Getenv(EnvVarPort)
@@ -39,7 +64,8 @@ func main() {
 		TimestampFormat:  time.RFC3339Nano,
 	})
 	s := &apiStore{
-		log: log,
+		log:      log,
+		fsClient: fsClient,
 	}
 
 	service := os.Getenv(EnvVarService)
@@ -53,6 +79,8 @@ func main() {
 	}
 
 	r := gin.New()
+	r.Use(cors.Default())
+
 	r.Use(MiddlewareLogger(log))
 	api := r.Group("/api")
 	api.POST("/match", s.handleStartMatch)
