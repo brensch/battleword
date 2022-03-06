@@ -186,7 +186,7 @@ func (m *Match) PlayGame(g *Game) {
 				fastestTime = result.state.TotalTime
 			}
 
-			numGuesses := len(result.state.Guesses)
+			numGuesses := len(result.state.GuessResults)
 			if !result.state.Correct {
 				numGuesses++
 			}
