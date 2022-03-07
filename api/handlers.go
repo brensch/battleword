@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/brensch/battleword"
@@ -42,10 +43,10 @@ func (s *apiStore) handleStartMatch(c *gin.Context) {
 		match.Start()
 		match.Summarise()
 		match.Broadcast()
-		// _, err = s.fsClient.Collection(FirestoreMatchCollection).Doc(match.UUID).Set(context.Background(), match)
-		// if err != nil {
-		// 	s.log.WithError(err).Error("failed to write match to firestore")
-		// }
+		_, err = s.fsClient.Collection(FirestoreMatchCollection).Doc(match.UUID).Set(context.Background(), match)
+		if err != nil {
+			s.log.WithError(err).Error("failed to write match to firestore")
+		}
 	}()
 
 	var playerDefinitions []*battleword.PlayerDefinition
