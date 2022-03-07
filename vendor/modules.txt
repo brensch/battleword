@@ -22,15 +22,16 @@ cloud.google.com/go/iam
 cloud.google.com/go/storage
 cloud.google.com/go/storage/internal
 cloud.google.com/go/storage/internal/apiv2
-# firebase.google.com/go v3.13.0+incompatible
-## explicit
-firebase.google.com/go
-firebase.google.com/go/auth
-firebase.google.com/go/db
-firebase.google.com/go/iid
-firebase.google.com/go/internal
-firebase.google.com/go/messaging
-firebase.google.com/go/storage
+# firebase.google.com/go/v4 v4.7.1
+## explicit; go 1.11
+firebase.google.com/go/v4
+firebase.google.com/go/v4/auth
+firebase.google.com/go/v4/db
+firebase.google.com/go/v4/errorutils
+firebase.google.com/go/v4/iid
+firebase.google.com/go/v4/internal
+firebase.google.com/go/v4/messaging
+firebase.google.com/go/v4/storage
 # github.com/gin-contrib/cors v1.3.1
 ## explicit; go 1.13
 github.com/gin-contrib/cors
