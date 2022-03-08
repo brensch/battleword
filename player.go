@@ -24,7 +24,7 @@ type Player struct {
 
 	connection *PlayerConnection
 
-	mu  sync.Mutex
+	mu  *sync.Mutex
 	log logrus.FieldLogger
 }
 
@@ -71,7 +71,7 @@ type PlayerGameState struct {
 	TotalTime time.Duration   `json:"total_time,omitempty"`
 }
 
-func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
+func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -127,6 +127,7 @@ func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
 		connection: c,
 		Definition: definition,
 
+		mu:  mu,
 		log: log.WithField("player_id", id),
 	}, nil
 }

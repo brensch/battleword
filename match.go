@@ -24,6 +24,9 @@ type Match struct {
 	allWords    []string
 	commonWords []string
 
+	// this is used to stop writing to allow us to take a snapshot for upload
+	mu *sync.Mutex
+
 	log logrus.FieldLogger
 }
 
@@ -42,6 +45,7 @@ type MatchSummary struct {
 func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
 	id := uuid.NewString()
 	log := parentLog.WithField("match_id", id)
+	mu := &sync.Mutex{}
 
 	games := make([]*Game, numGames)
 	for i := 0; i < numGames; i++ {
@@ -63,6 +67,7 @@ func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, pla
 					"player_definition": player.Definition,
 				}).
 				Debug("got player info")
+
 			players = append(players, player)
 
 		}
@@ -80,7 +85,7 @@ func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, pla
 		wgGenerate.Add(1)
 		go func(playerURI string) {
 			defer wgGenerate.Done()
-			player, err := InitPlayer(log, playerURI)
+			player, err := InitPlayer(mu, log, playerURI)
 			if err != nil {
 				log.
 					WithFields(logrus.Fields{
@@ -118,6 +123,7 @@ func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, pla
 		allWords:    allWords,
 		commonWords: commonWords,
 
+		mu:  mu,
 		log: log,
 	}, nil
 
