@@ -126,14 +126,16 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var us *battleword.Player
+	var us battleword.Player
+	found := false
 	for _, player := range finalState.Results.Players {
 		if player.ID == finalState.PlayerID {
 			us = player
+			found = true
 		}
 	}
 
-	if us == nil {
+	if !found {
 		log.Println("we weren't in the results. strange")
 		return
 	}
@@ -141,7 +143,7 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 	finalStateJSON, _ := json.Marshal(finalState)
 
 	log.Println("the game concluded, and the engine sent me the final state for all players:", string(finalStateJSON))
-	log.Println("our final statistics were:")
+	log.Println("we had ID: ", us.ID)
 	// TODO: add helper functions back in to do this.
 	// log.Printf("accuracy: %f%%", float64(us.Summary.GamesWon)/float64(len(finalState.Results.Games)))
 	// log.Printf("speed: %s", us.Summary.TotalTime)

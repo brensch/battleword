@@ -31,8 +31,8 @@ type Match struct {
 type MatchSnapshot struct {
 	UUID string `json:"uuid,omitempty"`
 
-	Players []*Player `json:"players,omitempty"`
-	Games   []Game    `json:"games,omitempty"`
+	Players []Player `json:"players,omitempty"`
+	Games   []Game   `json:"games,omitempty"`
 
 	RoundsPerGame  int `json:"rounds_per_game,omitempty"`
 	LettersPerWord int `json:"letters_per_word,omitempty"`
@@ -151,10 +151,16 @@ func (m *Match) Snapshot() MatchSnapshot {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	var players []Player
+	for _, player := range m.players {
+		players = append(players, *player)
+	}
+
 	return MatchSnapshot{
 		UUID:           m.uuid,
 		Games:          m.games,
-		Players:        m.players,
+		Players:        players,
 		RoundsPerGame:  m.numRounds,
 		LettersPerWord: m.numLetters,
 	}
