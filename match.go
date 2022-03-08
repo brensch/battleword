@@ -32,8 +32,8 @@ type Match struct {
 type MatchSnapshot struct {
 	UUID string `json:"uuid,omitempty"`
 
-	Players []*Player `json:"players,omitempty"`
-	Games   []Game    `json:"games,omitempty"`
+	Players []Player `json:"players,omitempty"`
+	Games   []Game   `json:"games,omitempty"`
 
 	RoundsPerGame  int `json:"rounds_per_game,omitempty"`
 	LettersPerWord int `json:"letters_per_word,omitempty"`
@@ -154,25 +154,25 @@ func (m *Match) Snapshot() MatchSnapshot {
 	defer m.mu.Unlock()
 
 	// JSON isolator
-	body, err := json.Marshal(m)
+	body, err := json.Marshal(m.players)
 	if err != nil {
 		fmt.Println("wtf")
 		return MatchSnapshot{}
 	}
 
-	var decoupledMatch Match
-	err = json.Unmarshal(body, &decoupledMatch)
+	var decoupledPlayers []Player
+	err = json.Unmarshal(body, &decoupledPlayers)
 	if err != nil {
 		fmt.Println("wtf")
 		return MatchSnapshot{}
 	}
 
 	return MatchSnapshot{
-		UUID:           decoupledMatch.uuid,
-		Games:          decoupledMatch.games,
-		Players:        decoupledMatch.players,
-		RoundsPerGame:  decoupledMatch.numRounds,
-		LettersPerWord: decoupledMatch.numLetters,
+		UUID:           m.uuid,
+		Games:          m.games,
+		Players:        decoupledPlayers,
+		RoundsPerGame:  m.numRounds,
+		LettersPerWord: m.numLetters,
 	}
 
 }
