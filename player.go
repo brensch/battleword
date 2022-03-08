@@ -14,26 +14,14 @@ import (
 )
 
 type Player struct {
-	ID         string             `json:"id,omitempty"`
-	Definition *PlayerDefinition  `json:"definition,omitempty"`
-	Games      []*PlayerGameState `json:"state,omitempty"`
+	ID          string            `json:"id,omitempty"`
+	Definition  PlayerDefinition  `json:"definition,omitempty"`
+	GamesPlayed []PlayerGameState `json:"games_played,omitempty"`
 
-	Summary *PlayerSummary `json:"player_summary,omitempty"`
+	connection PlayerConnection
 
-	FailedToFinish bool `json:"failed_to_finish,omitempty"`
-
-	connection *PlayerConnection
-
-	mu  sync.Mutex
+	mu  *sync.Mutex
 	log logrus.FieldLogger
-}
-
-type PlayerSummary struct {
-	TotalTime      time.Duration `json:"total_time,omitempty"`
-	TotalGuesses   int           `json:"total_guesses"`
-	AverageGuesses float64       `json:"average_guesses,omitempty"`
-	GamesWon       int           `json:"games_won"`
-	TotalVolume    float64       `json:"total_volume,omitempty"`
 }
 
 type PlayerDefinition struct {
@@ -51,27 +39,24 @@ type PlayerConnection struct {
 }
 
 type GuessResult struct {
-	Guess  string
-	Result []int
+	Guess  string `json:"guess,omitempty"`
+	Result []int  `json:"result,omitempty"`
 }
 
 type PlayerGameState struct {
 	GameID string `json:"game_id,omitempty"`
 
-	GuessResults []*GuessResult `json:"guess_results,omitempty"`
+	GuessResults []GuessResult `json:"guess_results,omitempty"`
 
-	// Guesses []string `json:"guesses,omitempty"`
-	// Results [][]int  `json:"results,omitempty"`
 	Correct bool   `json:"correct,omitempty"`
 	Error   string `json:"error,omitempty"`
 
 	shouts []string `json:"shouts,omitempty"`
 
-	Times     []time.Duration `json:"times,omitempty"`
-	TotalTime time.Duration   `json:"total_time,omitempty"`
+	GuessDurationsNS []int64 `json:"guess_durations_ns,omitempty"`
 }
 
-func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
+func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -83,7 +68,7 @@ func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
 		Timeout: 500 * time.Second,
 	}
 
-	c := &PlayerConnection{
+	c := PlayerConnection{
 		uri:    uri,
 		client: client,
 
@@ -92,11 +77,9 @@ func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
 
 	// we want the GetDefinition call to be the thing that wakes an api up if people are hosting
 	// serverless. so give them a few retries just in case
-
-	var definition *PlayerDefinition
+	var definition PlayerDefinition
 	var err error
 	for i := 0; i < 5; i++ {
-
 		definition, err = GetDefinition(c)
 		if err != nil {
 			log.
@@ -127,104 +110,65 @@ func InitPlayer(log logrus.FieldLogger, uri string) (*Player, error) {
 		connection: c,
 		Definition: definition,
 
+		mu:  mu,
 		log: log.WithField("player_id", id),
 	}, nil
 }
 
-func (p *Player) PlayGame(g *Game) *PlayerGameState {
-	gameState := &PlayerGameState{
-		GameID: g.ID,
+func (p *Player) PlayMatch(games []Game) {
+
+	var wgGenerate, wgListen sync.WaitGroup
+	// this is buffered since we may get mutexed out of appending to the gamestate list
+	// temporarily
+	gameStateCHAN := make(chan PlayerGameState, 10)
+
+	wgListen.Add(1)
+	go func() {
+		defer wgListen.Done()
+		for game := range gameStateCHAN {
+			p.mu.Lock()
+			p.GamesPlayed = append(p.GamesPlayed, game)
+			p.mu.Unlock()
+		}
+	}()
+
+	for _, game := range games {
+		wgGenerate.Add(1)
+		go func(game Game) {
+			defer wgGenerate.Done()
+			gameStateCHAN <- PlayGame(p.connection, game)
+		}(game)
 	}
 
-	p.log.
-		WithFields(logrus.Fields{
-			"game_id": g.ID,
-		}).
-		Debug("started game")
-
-	gameState.PlayGame(p.connection, p.Definition, g)
-
-	if gameState.Error != "" {
-		p.log.
-			WithFields(logrus.Fields{
-				"game_id": g.ID,
-				"error":   gameState.Error,
-			}).
-			Error("player had error during game")
-	}
-
-	p.log.
-		WithFields(logrus.Fields{
-			"game_id": g.ID,
-		}).
-		Debug("finished game")
-
-	return gameState
-
+	wgGenerate.Wait()
+	close(gameStateCHAN)
+	wgListen.Wait()
 }
 
-func (s *PlayerGameState) PlayGame(c *PlayerConnection, d *PlayerDefinition, g *Game) {
+func PlayGame(c PlayerConnection, g Game) PlayerGameState {
+
+	state := PlayerGameState{
+		GameID: g.ID,
+	}
+	var err error
+
 	for {
-		correct, err := s.DoMove(c, g.Answer)
+		state, err = GetNextState(c, state, g.Answer)
 		if err != nil {
-			s.Error = err.Error()
-			break
+			state.Error = err.Error()
+			return state
 		}
 
-		if correct {
-			s.Correct = true
-			break
+		if state.Correct {
+			state.Correct = true
+			return state
 		}
 
 		// https://i.redd.it/cw0cedsc93h81.jpg
-		if len(s.GuessResults) == g.numRounds {
-			break
+		if len(state.GuessResults) == g.numRounds {
+			return state
 		}
 	}
-
-	for _, guessTime := range s.Times {
-		s.TotalTime += guessTime
-	}
-}
-
-func (s *PlayerGameState) DoMove(c *PlayerConnection, answer string) (bool, error) {
-
-	guess, err := s.GetGuess(c)
-	if err != nil {
-		return false, err
-	}
-
-	s.Times = append(s.Times, guess.time)
-
-	err = s.RecordGuess(guess, answer)
-	if err != nil {
-		return false, err
-	}
-
-	correct := false
-	if guess.Guess == answer {
-		correct = true
-	}
-
-	return correct, nil
-}
-
-func (s *PlayerGameState) RecordGuess(guess *Guess, answer string) error {
-
-	if !ValidGuess(guess.Guess, answer) {
-		return fmt.Errorf("guess is invalid")
-	}
-
-	result := GetResult(guess.Guess, answer)
-	s.GuessResults = append(s.GuessResults, result)
-
-	// s.Guesses = append(s.Guesses, guess.Guess)
-	// s.Results = append(s.Results, result)
-
-	// TODO: also implement shouter to send shouts to everyone.
-	s.shouts = append(s.shouts, guess.Shout)
-
-	return nil
 }
 
 type Guess struct {
@@ -232,20 +176,18 @@ type Guess struct {
 
 	// For the lols:
 	Shout string `json:"shout,omitempty"`
-
-	time time.Duration
 }
 
-func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
+func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerGameState, error) {
 
 	guessesJson, err := json.Marshal(s)
 	if err != nil {
-		return nil, err
+		return PlayerGameState{}, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/guess", c.uri), bytes.NewReader(guessesJson))
 	if err != nil {
-		return nil, err
+		return PlayerGameState{}, err
 	}
 
 	// wait for a channel to free up for this player
@@ -255,30 +197,38 @@ func (s *PlayerGameState) GetGuess(c *PlayerConnection) (*Guess, error) {
 	start := time.Now()
 	res, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return PlayerGameState{}, err
 	}
-	guessDuration := time.Since(start)
-
 	defer res.Body.Close()
 
-	var guess *Guess
+	guessDuration := time.Since(start)
+
+	var guess Guess
 	err = json.NewDecoder(res.Body).Decode(&guess)
 	if err != nil {
-		return nil, err
+		return PlayerGameState{}, err
 	}
 
-	guess.time = guessDuration
+	if !ValidGuess(guess.Guess, answer) {
+		return PlayerGameState{}, fmt.Errorf("guess is invalid: %s", guess.Guess)
+	}
 
-	return guess, nil
+	result := GetResult(guess.Guess, answer)
+
+	s.GuessResults = append(s.GuessResults, result)
+	s.GuessDurationsNS = append(s.GuessDurationsNS, guessDuration.Nanoseconds())
+	s.shouts = append(s.shouts, guess.Shout)
+
+	return s, nil
 }
 
 // this struct includes the player's id to give them certainty about who they were
 type PlayerMatchResults struct {
-	PlayerID string `json:"player_id,omitempty"`
-	Results  *Match `json:"results,omitempty"`
+	PlayerID string        `json:"player_id,omitempty"`
+	Results  MatchSnapshot `json:"results,omitempty"`
 }
 
-func (p *Player) BroadcastMatch(m *Match) error {
+func (p *Player) BroadcastMatch(m MatchSnapshot) error {
 
 	results := PlayerMatchResults{
 		PlayerID: p.ID,
@@ -307,62 +257,25 @@ func (p *Player) BroadcastMatch(m *Match) error {
 
 }
 
-func GetDefinition(c *PlayerConnection) (*PlayerDefinition, error) {
+func GetDefinition(c PlayerConnection) (PlayerDefinition, error) {
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/ping", c.uri), nil)
 	if err != nil {
-		return nil, err
+		return PlayerDefinition{}, err
 	}
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return PlayerDefinition{}, err
 	}
 
 	defer res.Body.Close()
 
-	var definition *PlayerDefinition
+	var definition PlayerDefinition
 	err = json.NewDecoder(res.Body).Decode(&definition)
 	if err != nil {
-		return nil, err
+		return PlayerDefinition{}, err
 	}
 
 	return definition, nil
-}
-
-func (p *Player) Summarise() {
-
-	var totalTime time.Duration
-	var totalGuesses, totalGamesWon int
-
-	for _, game := range p.Games {
-
-		if game.Error != "" {
-			continue
-		}
-
-		for _, guessTime := range game.Times {
-			totalTime += guessTime
-		}
-
-		if game.Correct {
-			totalGamesWon++
-		}
-
-		totalGuesses += len(game.GuessResults)
-		if !game.Correct {
-			// add one if they didn't get it
-			// (otherwise someone who guessed in 6 is the same as someone who failed)
-			totalGuesses++
-		}
-
-	}
-
-	p.Summary = &PlayerSummary{
-		TotalTime:      totalTime,
-		TotalGuesses:   totalGuesses,
-		AverageGuesses: float64(totalGuesses) / float64(len(p.Games)),
-		GamesWon:       totalGamesWon,
-	}
-
 }

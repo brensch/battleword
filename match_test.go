@@ -32,8 +32,8 @@ func TestMatchInit(t *testing.T) {
 		return
 	}
 
-	if len(match.Games) != gameCount {
-		t.Log("wrong game count", len(match.Games), gameCount)
+	if len(match.games) != gameCount {
+		t.Log("wrong game count", len(match.games), gameCount)
 		t.FailNow()
 	}
 }
