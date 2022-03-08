@@ -126,17 +126,18 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var us *battleword.Player
-	for _, player := range finalState.Results.Players {
-		if player.ID == finalState.PlayerID {
-			us = player
-		}
-	}
+	// var us battleword.Player
+	// found := false
+	// for _, player := range finalState.Results.Players {
+	// 	if player.ID == finalState.PlayerID {
+	// 		us = player
+	// 	}
+	// }
 
-	if us == nil {
-		log.Println("we weren't in the results. strange")
-		return
-	}
+	// if !found {
+	// 	log.Println("we weren't in the results. strange")
+	// 	return
+	// }
 
 	finalStateJSON, _ := json.Marshal(finalState)
 
