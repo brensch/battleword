@@ -11,25 +11,25 @@ type Game struct {
 	ID     string `json:"id,omitempty"`
 	Answer string `json:"answer,omitempty"`
 
-	Summary *GameSummary `json:"summary,omitempty"`
+	// Summary *GameSummary `json:"summary,omitempty"`
 
 	numLetters int
 	numRounds  int
 }
 
-type GameSummary struct {
-	Start time.Time `json:"start,omitempty"`
-	End   time.Time `json:"end,omitempty"`
+// type GameSummary struct {
+// 	Start time.Time `json:"start,omitempty"`
+// 	End   time.Time `json:"end,omitempty"`
 
-	Fastest      Fastest      `json:"fastest,omitempty"`
-	MostAccurate MostAccurate `json:"most_accurate,omitempty"`
-	Loudest      Loudest      `json:"loudest,omitempty"`
-}
+// 	Fastest      Fastest      `json:"fastest,omitempty"`
+// 	MostAccurate MostAccurate `json:"most_accurate,omitempty"`
+// 	Loudest      Loudest      `json:"loudest,omitempty"`
+// }
 
-func InitGame(commonWords []string, numLetters, numRounds int) *Game {
+func InitGame(commonWords []string, numLetters, numRounds int) Game {
 
 	id := uuid.New()
-	game := &Game{
+	game := Game{
 		ID: id.String(),
 
 		// TODO:make this adjust to numletters

@@ -59,7 +59,6 @@ func main() {
 	}
 
 	match.Start()
-	match.Summarise()
 	match.Broadcast()
 
 	log.Println("game finished")

@@ -142,8 +142,8 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("the game concluded, and the engine sent me the final state for all players:", string(finalStateJSON))
 	log.Println("our final statistics were:")
-	log.Printf("accuracy: %f%%", float64(us.Summary.GamesWon)/float64(len(finalState.Results.Games)))
-	log.Printf("speed: %s", us.Summary.TotalTime)
-	log.Printf("average guesses: %f", float64(us.Summary.TotalGuesses)/float64(len(finalState.Results.Games)))
+	// log.Printf("accuracy: %f%%", float64(us.Summary.GamesWon)/float64(len(finalState.Results.Games)))
+	// log.Printf("speed: %s", us.Summary.TotalTime)
+	// log.Printf("average guesses: %f", float64(us.Summary.TotalGuesses)/float64(len(finalState.Results.Games)))
 
 }
