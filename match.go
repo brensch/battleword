@@ -1,6 +1,7 @@
 package battleword
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
@@ -31,8 +32,8 @@ type Match struct {
 type MatchSnapshot struct {
 	UUID string `json:"uuid,omitempty"`
 
-	Players []Player `json:"players,omitempty"`
-	Games   []Game   `json:"games,omitempty"`
+	Players []*Player `json:"players,omitempty"`
+	Games   []Game    `json:"games,omitempty"`
 
 	RoundsPerGame  int `json:"rounds_per_game,omitempty"`
 	LettersPerWord int `json:"letters_per_word,omitempty"`
@@ -152,17 +153,26 @@ func (m *Match) Snapshot() MatchSnapshot {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var players []Player
-	for _, player := range m.players {
-		players = append(players, *player)
+	// JSON isolator
+	body, err := json.Marshal(m)
+	if err != nil {
+		fmt.Println("wtf")
+		return MatchSnapshot{}
+	}
+
+	var decoupledMatch Match
+	err = json.Unmarshal(body, &decoupledMatch)
+	if err != nil {
+		fmt.Println("wtf")
+		return MatchSnapshot{}
 	}
 
 	return MatchSnapshot{
-		UUID:           m.uuid,
-		Games:          m.games,
-		Players:        players,
-		RoundsPerGame:  m.numRounds,
-		LettersPerWord: m.numLetters,
+		UUID:           decoupledMatch.uuid,
+		Games:          decoupledMatch.games,
+		Players:        decoupledMatch.players,
+		RoundsPerGame:  decoupledMatch.numRounds,
+		LettersPerWord: decoupledMatch.numLetters,
 	}
 
 }
