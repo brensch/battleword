@@ -165,12 +165,13 @@ func (m *Match) Snapshot() MatchSnapshot {
 func (m *Match) Broadcast() {
 
 	var wg sync.WaitGroup
+	snapshot := m.Snapshot()
 
 	for _, player := range m.players {
 		wg.Add(1)
 		go func(player *Player) {
 			defer wg.Done()
-			err := player.BroadcastMatch(m)
+			err := player.BroadcastMatch(snapshot)
 			if err != nil {
 				log.Println(err)
 			}

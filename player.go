@@ -224,11 +224,11 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerG
 
 // this struct includes the player's id to give them certainty about who they were
 type PlayerMatchResults struct {
-	PlayerID string `json:"player_id,omitempty"`
-	Results  *Match `json:"results,omitempty"`
+	PlayerID string        `json:"player_id,omitempty"`
+	Results  MatchSnapshot `json:"results,omitempty"`
 }
 
-func (p *Player) BroadcastMatch(m *Match) error {
+func (p *Player) BroadcastMatch(m MatchSnapshot) error {
 
 	results := PlayerMatchResults{
 		PlayerID: p.ID,
