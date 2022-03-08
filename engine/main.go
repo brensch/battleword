@@ -64,7 +64,7 @@ func main() {
 	log.Println("game finished")
 	// gameJSON, _ := json.Marshal(match)
 
-	err = json.NewEncoder(f).Encode(match)
+	err = json.NewEncoder(f).Encode(match.Snapshot())
 	if err != nil {
 		log.Println("couldn't write to file", err)
 		return
