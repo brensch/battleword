@@ -12,7 +12,7 @@ import (
 type Match struct {
 	uuid string
 
-	players []Player
+	players []*Player
 	games   []Game
 
 	numRounds  int
@@ -31,8 +31,8 @@ type Match struct {
 type MatchSnapshot struct {
 	UUID string `json:"uuid,omitempty"`
 
-	Players []Player `json:"players,omitempty"`
-	Games   []Game   `json:"games,omitempty"`
+	Players []*Player `json:"players,omitempty"`
+	Games   []Game    `json:"games,omitempty"`
 
 	RoundsPerGame  int `json:"rounds_per_game,omitempty"`
 	LettersPerWord int `json:"letters_per_word,omitempty"`
@@ -51,9 +51,9 @@ func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, pla
 	}
 
 	var wgGenerate, wgListen sync.WaitGroup
-	playerCHAN := make(chan Player)
+	playerCHAN := make(chan *Player)
 	errCHAN := make(chan error)
-	var players []Player
+	var players []*Player
 	var errors []error
 
 	wgListen.Add(1)
@@ -136,7 +136,7 @@ func (m *Match) Start() {
 
 	for _, player := range m.players {
 		wg.Add(1)
-		go func(player Player) {
+		go func(player *Player) {
 			defer wg.Done()
 			player.PlayMatch(m.games)
 		}(player)
@@ -169,7 +169,7 @@ func (m *Match) Broadcast() {
 
 	for _, player := range m.players {
 		wg.Add(1)
-		go func(player Player) {
+		go func(player *Player) {
 			defer wg.Done()
 			err := player.BroadcastMatch(snapshot)
 			if err != nil {

@@ -56,7 +56,7 @@ type PlayerGameState struct {
 	GuessDurationsNS []int64 `json:"guess_durations_ns,omitempty"`
 }
 
-func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (Player, error) {
+func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -101,11 +101,11 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (Player, err
 			}).
 			WithError(err).
 			Error("failed to get player definition")
-		return Player{}, fmt.Errorf("failed to retrieve definition from player: %+v", err)
+		return nil, fmt.Errorf("failed to retrieve definition from player: %+v", err)
 	}
 
 	id := uuid.NewString()
-	return Player{
+	return &Player{
 		ID:         id,
 		connection: c,
 		Definition: definition,
