@@ -18,12 +18,12 @@ The player's api should then respond to the state of the game in the body of the
 To test your own guesser against the engine, create an api that implements the schema below. Once you've done that, run the engine against the api location of your solver like so:
 
 ```
-./engine --names muchbettersolver --apis http://localhost:8081
+./engine --apis http://localhost:8081
 ```
 
 You can specify multiple solvers to compete against each other:
 ```
-./engine --names muchbettersolver,solvo --apis http://localhost:8081,http://localhost:8080
+./engine --apis http://localhost:8081,http://localhost:8080
 ```
 
 NB these commands are executed in a command line of your choice. Exact syntax may change based on your OS.
