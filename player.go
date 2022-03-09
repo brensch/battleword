@@ -25,8 +25,9 @@ type Player struct {
 }
 
 type PlayerDefinition struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
+	Name                string `json:"name,omitempty"`
+	Description         string `json:"description,omitempty"`
+	ConcurrentConnLimit int    `json:"concurrent_connection_limit,omitempty"`
 }
 
 // This is all secret or not json readable types
@@ -71,8 +72,6 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 	c := PlayerConnection{
 		uri:    uri,
 		client: client,
-
-		concurrentConnectionLimiter: make(chan struct{}, 100),
 	}
 
 	// we want the GetDefinition call to be the thing that wakes an api up if people are hosting
@@ -103,6 +102,13 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 			Error("failed to get player definition")
 		return nil, fmt.Errorf("failed to retrieve definition from player: %+v", err)
 	}
+
+	// Set the connection limit based off what the player specified
+	connectionLimit := definition.ConcurrentConnLimit
+	if connectionLimit == 0 {
+		connectionLimit = 5
+	}
+	c.concurrentConnectionLimiter = make(chan struct{}, definition.ConcurrentConnLimit)
 
 	id := uuid.NewString()
 	return &Player{
@@ -190,7 +196,7 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerG
 		return PlayerGameState{}, err
 	}
 
-	// wait for a channel to free up for this player
+	// Make sure we don't go over the concurrent connection limit for this player.
 	c.concurrentConnectionLimiter <- struct{}{}
 	defer func() { <-c.concurrentConnectionLimiter }()
 
