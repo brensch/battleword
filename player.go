@@ -51,7 +51,7 @@ type PlayerGameState struct {
 	Correct bool   `json:"correct,omitempty"`
 	Error   string `json:"error,omitempty"`
 
-	shouts []string `json:"shouts,omitempty"`
+	shouts []string
 
 	GuessDurationsNS []int64 `json:"guess_durations_ns,omitempty"`
 }
