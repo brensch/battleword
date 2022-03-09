@@ -108,7 +108,7 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 	if connectionLimit == 0 {
 		connectionLimit = 5
 	}
-	c.concurrentConnectionLimiter = make(chan struct{}, definition.ConcurrentConnLimit)
+	c.concurrentConnectionLimiter = make(chan struct{}, connectionLimit)
 
 	id := uuid.NewString()
 	return &Player{
