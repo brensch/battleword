@@ -1,37 +1,37 @@
-# battleword
-wordle is cool right now
+# Battleword
+Wordle is cool right now
 
-## what is this
-battleword is a competition to see who can come up with the fastest/most accurate/shoutiest wordle solver.
+## What is this
+Battleword is a competition to see who can come up with the fastest/most accurate/shoutiest wordle solver.
 
-players host an api, then the battleword engine will make a `POST` request to their api with the state of a wordle (starting empty)
+Players host an api, then the battleword engine will make a `POST` request to their api with the state of a wordle (starting empty).
 
-the player's api should then respond to the state of the game in the body of the post with their best guess. as soon as the battleword engine hears back from them, it will send the results of their guess in a new request. it will do that until the player's api guesses correctly, or they reach the guess limit.
+The player's api should then respond to the state of the game in the body of the post with their best guess. As soon as the battleword engine hears back from them, it will send the results of their guess in a new request. It will do that until the player's api guesses correctly, or they reach the guess limit.
 
-## quickstart
+## Quickstart
 
-1. download the latest release for your OS and unpack
-2. run `solvo` (double click) - this starts solvo the solver. he will listen for game states from engine.
-3. run `engine` - this starts sending game states to solvo. with every guess solvo makes, engine will send a new request to solvo with the results of his previous guess. solvo will ignore those results and choose a completely random word to send next. your solver should do better than solvo.
+1. Download the latest release for your OS and unpack
+2. Run `solvo` (double click) - this starts solvo the solver. He will listen for game states from engine.
+3. Run `engine` - this starts sending game states to solvo. With every guess solvo makes, engine will send a new request to solvo with the results of his previous guess. Solvo will ignore those results and choose a completely random word to send next. Your solver should do better than solvo.
 
-## setup
-to test your own guesser against the engine, create an api that implements the schema below. once you've done that, run the engine against the api location of your solver like so:
+## Setup
+To test your own guesser against the engine, create an api that implements the schema below. Once you've done that, run the engine against the api location of your solver like so:
 
 ```
 ./engine --names muchbettersolver --apis http://localhost:8081
 ```
 
-you can specify multiple solvers to compete against each other:
+You can specify multiple solvers to compete against each other:
 ```
 ./engine --names muchbettersolver,solvo --apis http://localhost:8081,http://localhost:8080
 ```
 
 NB these commands are executed in a command line of your choice. Exact syntax may change based on your OS.
 
-## api
-this is what all solvers need to implement.
+## API
+This is what all solvers need to implement.
 ### /guess
-the engine will hit your api here with the previous results of a game. you are expected to respond with your best guess.
+The engine will hit your api here with the previous results of a game. You are expected to respond with your best guess.
 #### Request:
 ```json
 {
@@ -67,7 +67,7 @@ the engine will hit your api here with the previous results of a game. you are e
 Shouts server no purpose except to intimidate your opponents.
 
 ### /ping
-in order to get the definition of your character, the engine will ping you. this is also run at the start of each match up to 10 times in order to wake up your server if you're hosting it in serverless land where everything is slightly less reliable.
+In order to get the definition of your character, the engine will ping you. This is also run at the start of each match up to 10 times in order to wake up your server if you're hosting it in serverless land where everything is slightly less reliable.
 
 #### Request:
 GET request - no payload
@@ -78,10 +78,10 @@ GET request - no payload
 	"description": "the magnificent"
 }
 ```
-there will be more things here in the future. stay posted.
+There will be more things here in the future. stay posted.
 
 ### /results
-once all players are finished, the engine will send you the results of everyone in the match so you can brag. no response is required.
+Once all players are finished, the engine will send you the results of everyone in the match. No response is required, except maybe to message your friends to brag. The below body is just one player, if there were multiple you'd see more objects in the `players` array.
 #### Request:
 ```json
 {
@@ -199,26 +199,27 @@ once all players are finished, the engine will send you the results of everyone 
 
 ```
 
-### releasing
- in order to release, run:
+### Releasing
+In order to release, run:
+
 ```
 git tag -a v0.1.0 -m "First release"
 git push origin v0.1.0
 goreleaser release
 ```
 
-to do a dry run (no upload): 
+To do a dry run (no upload): 
 ```
 goreleaser release --snapshot --rm-dist
 ```
 
 `GITHUB_TOKEN` is a standard PAT from github and needs to be set to upload.
 
-### identity federation
+### Identity Federation
 
-to allow a github project to use gcloud resources:
+To allow a github project to use gcloud resources:
 
-setup pool:
+Setup pool:
 ```bash
 gcloud iam workload-identity-pools create "github-pool" \
   --project="battleword" \
@@ -226,7 +227,7 @@ gcloud iam workload-identity-pools create "github-pool" \
   --display-name="github-pool"
 ```
 
-setup workload
+Setup workload:
 ```bash
 gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --project="battleword" \
@@ -237,7 +238,7 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --issuer-uri="https://token.actions.githubusercontent.com"
 ```
 
-allow the identity provider to impersonate the service account
+Allow the identity provider to impersonate the service account:
 
 ```bash
 gcloud iam service-accounts add-iam-policy-binding "github@battleword.iam.gserviceaccount.com" \
@@ -245,3 +246,4 @@ gcloud iam service-accounts add-iam-policy-binding "github@battleword.iam.gservi
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/339690027814/locations/global/workloadIdentityPools/github-pool/attribute.repository/brensch/battleword"
 ```
+This is kind of magic and tbh I don't understand it well yet. It is working successfully however and this repo auto deploys to GCP on every commit to the branches `api/dev` and `api/prod`.
