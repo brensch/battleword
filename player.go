@@ -59,27 +59,12 @@ type PlayerGameState struct {
 
 func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, error) {
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			// odds are someone will be hosting this jankily.
-			// the ramifications of a mitm attack are 0
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-		// need to think about setting this dynamically for humans
-		Timeout: 500 * time.Second,
-	}
-
-	c := PlayerConnection{
-		uri:    uri,
-		client: client,
-	}
-
 	// we want the GetDefinition call to be the thing that wakes an api up if people are hosting
 	// serverless. so give them a few retries just in case
 	var definition PlayerDefinition
 	var err error
 	for i := 0; i < 5; i++ {
-		definition, err = GetDefinition(c)
+		definition, err = GetDefinition(uri)
 		if err != nil {
 			log.
 				WithFields(logrus.Fields{
@@ -101,6 +86,21 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 			WithError(err).
 			Error("failed to get player definition")
 		return nil, fmt.Errorf("failed to retrieve definition from player: %+v", err)
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			// odds are someone will be hosting this jankily.
+			// the ramifications of a mitm attack are 0
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		// Need to think about setting this dynamically for humans.
+		// We are getting the definition of the player before this so could easily figure out somehow from there.
+		Timeout: 500 * time.Second,
+	}
+	c := PlayerConnection{
+		uri:    uri,
+		client: client,
 	}
 
 	// Set the connection limit based off what the player specified
@@ -267,14 +267,22 @@ func (p *Player) BroadcastMatch(m MatchSnapshot) error {
 
 }
 
-func GetDefinition(c PlayerConnection) (PlayerDefinition, error) {
+func GetDefinition(uri string) (PlayerDefinition, error) {
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/ping", c.uri), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/ping", uri), nil)
 	if err != nil {
 		return PlayerDefinition{}, err
 	}
 
-	res, err := c.client.Do(req)
+	// We should use a very lenient http.Client here since users could be doing anything.
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		Timeout: 500 * time.Second,
+	}
+
+	res, err := client.Do(req)
 	if err != nil {
 		return PlayerDefinition{}, err
 	}
