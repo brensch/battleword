@@ -219,6 +219,10 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerG
 	s.GuessDurationsNS = append(s.GuessDurationsNS, guessDuration.Nanoseconds())
 	s.shouts = append(s.shouts, guess.Shout)
 
+	if result.Guess == answer {
+		s.Correct = true
+	}
+
 	return s, nil
 }
 
