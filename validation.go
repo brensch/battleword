@@ -8,7 +8,22 @@ const (
 
 // TODO: get word list up in here
 func ValidGuess(guess, answer string) bool {
-	return len(guess) == len(answer)
+	if len(guess) != len(answer) {
+		return false
+	}
+
+	for _, validWord := range CommonWords {
+		if validWord == guess {
+			return true
+		}
+	}
+
+	for _, validWord := range AllWords {
+		if validWord == guess {
+			return true
+		}
+	}
+	return false
 }
 
 func GetResult(guess, answer string) GuessResult {
