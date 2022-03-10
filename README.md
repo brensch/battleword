@@ -200,18 +200,5 @@ Once all players are finished, the engine will send you the results of everyone 
 ```
 
 ### Releasing
-In order to release, run:
-
-```
-git tag -a v0.1.0 -m "First release"
-git push origin v0.1.0
-goreleaser release
-```
-
-To do a dry run (no upload): 
-```
-goreleaser release --snapshot --rm-dist
-```
-
-`GITHUB_TOKEN` is a standard PAT from github and needs to be set to upload.
+Any time you add a new tag, a release is automatically built and deployed to github. [goreleaser](https://goreleaser.com/) is awesome.
 
