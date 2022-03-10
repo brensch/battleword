@@ -29,6 +29,9 @@ var (
 		{"seers", "ulcer", []int{0, 1, 0, 1, 0}},
 		{"seers", "ulcee", []int{0, 1, 1, 0, 0}},
 		{"seerse", "elceec", []int{0, 1, 1, 0, 0, 1}},
+		{"golly", "bosom", []int{0, 2, 0, 0, 0}},
+		{"bosom", "golly", []int{0, 2, 0, 0, 0}},
+		{"bisom", "golly", []int{0, 0, 0, 1, 0}},
 	}
 )
 
