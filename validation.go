@@ -14,28 +14,36 @@ func ValidGuess(guess, answer string) bool {
 func GetResult(guess, answer string) GuessResult {
 
 	result := make([]int, len(answer))
+	guessRunes := []rune(guess)
+	answerRunes := []rune(answer)
 
-	// I think there's probably an optimisation i could do here if
-	// i spent more time on leetcode.
-	for answerPos, answerChar := range answer {
-		bestPos := -1
-		bestResult := 0
-		for guessPos, guessChar := range guess {
-			if guessChar == answerChar && guessPos == answerPos {
-				bestPos = guessPos
-				bestResult = 2
-				break
-			}
-
-			if (bestPos == -1 || result[bestPos] > 0) && guessChar == answerChar {
-				bestPos = guessPos
-				bestResult = 1
-			}
+	// get greens
+	for i, guessRune := range guessRunes {
+		if guessRune != answerRunes[i] {
+			continue
 		}
 
-		if bestPos >= 0 {
-			result[bestPos] = bestResult
+		// benchmarked, it's much quicker to replace the rune than try and remove it any other way
+		answerRunes[i] = '😒'
+		result[i] = 2
+	}
+
+	// get yellows
+	for i, guessRune := range guessRunes {
+		if result[i] == 2 {
+			continue
 		}
+
+		for j, answerRune := range answerRunes {
+			if guessRune != answerRune {
+				continue
+			}
+			answerRunes[j] = '😒'
+			result[i] = 1
+			break
+
+		}
+
 	}
 
 	return GuessResult{
