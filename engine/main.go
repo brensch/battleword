@@ -44,10 +44,11 @@ func main() {
 		return
 	}
 
-	filename := fmt.Sprintf("results-%s.json", time.Now().Format(time.RFC3339))
+	// windows can't contain : in filenames. stitchup
+	filename := fmt.Sprintf("results-%s.json", time.Now().Format("20060102-150405-0700"))
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Println("couldn't create file", filename)
+		log.Printf("couldn't create file %s: %+v", filename, err)
 		return
 	}
 	defer f.Close()
