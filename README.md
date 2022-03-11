@@ -32,33 +32,34 @@ NB these commands are executed in a command line of your choice. Exact syntax ma
 This is what all solvers need to implement.
 ### /guess
 The engine will hit your api here with the previous results of a game. You are expected to respond with your best guess.
+Each `guess_results` object also comes with the start and finish time, plus an ID that correlates to the header `guessID` that gets sent with each request. I've omitted from this JSON for brevity. Solvo prints out the full body when you run him.
 #### Request:
 ```json
 {
-    "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2",
+    "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba",
     "guess_results": [
         {
-            "guess_id": "950b240e-7f55-4585-b51e-37bd950c590f",
-            "guess": "reach",
+            "guess": "tense",
             "result": [ 1, 0, 0, 0, 0 ]
         },
         {
-            "guess_id": "e0086c47-c094-41d0-bbea-dc587b385e9e",
-            "guess": "titan",
-            "result": [ 1, 1, 0, 0, 0 ]
+            "guess": "finer",
+            "result": [ 0, 1, 0, 0, 1 ]
         },
         {
-            "guess_id": "e2a233f8-2e1d-4d74-8ce6-df0f419053f2",
-            "guess": "rajah",
-            "result": [ 1, 0, 0, 0, 0 ]
+            "guess": "unset",
+            "result": [ 0, 0, 0, 0, 2 ]
         },
         {
-            "guess_id": "2b84c35e-abc2-4aef-87c9-3a90eb77b976",
-            "guess": "imbue",
-            "result": [ 1, 0, 0, 0, 0 ]
+            "guess": "cable",
+            "result": [ 0, 0, 0, 0, 0 ]
+        },
+        {
+            "guess": "deity",
+            "result": [ 2, 0, 1, 1, 0 ]
         }
     ],
-    "guess_durations_ns": [ 1001874500, 1000829600, 1000972000, 1000716200 ]
+    "guess_durations_ns": [ 1002925700, 1001538400, 1000738000, 1000947200, 1000960600 ]
 }
 ```
 #### Response:
@@ -86,86 +87,79 @@ There will be more things here in the future. stay posted.
 
 ### /results
 Once all players are finished, the engine will send you the results of everyone in the match. No response is required, except maybe to message your friends to brag. `player_id` represents your ID, look for the corresponding player in the `players` array to see how you went.
+As with the request, all objects come with an ID, start, and end time that has been omitted for brevity where unnecessary. Check Solvo for the exact body. 
 #### Request:
 ```json
 {
-    "player_id": "96abf359-1c33-4293-aeff-51bef796ee1d",
+    "player_id": "9fda863c-f303-47da-a8f0-35b0b84b1abe",
     "results": {
-        "match_id": "54a479dc-c3f0-461b-a97a-22d8aafcee4e",
+        "match_id": "777f785b-d2f9-4467-990e-e2f90efe3b52",
         "players": [
             {
-                "player_id": "96abf359-1c33-4293-aeff-51bef796ee1d",
+                "player_id": "9fda863c-f303-47da-a8f0-35b0b84b1abe",
                 "definition": {
                     "name": "solvo",
                     "description": "the magnificent"
                 },
                 "games_played": [
                     {
-                        "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2",
+                        "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba",
                         "guess_results": [
                             {
-                                "guess_id": "950b240e-7f55-4585-b51e-37bd950c590f",
-                                "guess": "reach",
+                                "guess": "tense",
                                 "result": [ 1, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess_id": "e0086c47-c094-41d0-bbea-dc587b385e9e",
-                                "guess": "titan",
-                                "result": [ 1, 1, 0, 0, 0 ]
+                                "guess": "finer",
+                                "result": [ 0, 1, 0, 0, 1 ]
                             },
                             {
-                                "guess_id": "e2a233f8-2e1d-4d74-8ce6-df0f419053f2",
-                                "guess": "rajah",
-                                "result": [ 1, 0, 0, 0, 0 ]
+                                "guess": "unset",
+                                "result": [ 0, 0, 0, 0, 2 ]
                             },
                             {
-                                "guess_id": "2b84c35e-abc2-4aef-87c9-3a90eb77b976",
-                                "guess": "imbue",
-                                "result": [ 1, 0, 0, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "fb68b729-5445-4a41-a7a3-c4a3ee305759",
-                                "guess": "funky",
+                                "guess": "cable",
                                 "result": [ 0, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess_id": "fce2024e-a2b3-4d4e-9806-2b7c44d1b5b5",
-                                "guess": "kneel",
-                                "result": [ 0, 0, 0, 0, 0 ]
+                                "guess": "deity",
+                                "result": [ 2, 0, 1, 1, 0 ]
+                            },
+                            {
+                                "guess": "deter",
+                                "result": [ 2, 0, 1, 0, 1 ]
                             }
                         ],
-                        "guess_durations_ns": [ 1001874500, 1000829600, 1000972000, 1000716200, 1000844600, 1000734400 ]
+                        "guess_durations_ns": [ 1002925700, 1001538400, 1000738000, 1000947200, 1000960600, 1001443500 ]
                     }
-                ]
+                ],
             },
             {
-                "player_id": "ad249978-1d49-4e24-bff7-bd1e1c7fcca6",
+                "player_id": "b6f3c0ed-c885-4253-8d23-725def324c55",
                 "definition": {
                     "name": "schwordler",
                     "description": "the brave"
                 },
                 "games_played": [
                     {
-                        "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2",
+                        "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba",
                         "guess_results": [
                             {
-                                "guess_id": "f8be7f56-8efa-4dfd-b9df-af3765f7c28e",
                                 "guess": "crane",
                                 "result": [ 0, 2, 0, 0, 0 ]
                             },
                             {
-                                "guess_id": "3a804ca6-8f15-4e12-b561-81b82cc4aad2",
                                 "guess": "droit",
                                 "result": [ 2, 2, 2, 2, 2 ]
                             }
                         ],
                         "correct": true,
-                        "guess_durations_ns": [ 1458600, 1386800 ]
+                        "guess_durations_ns": [ 2135600, 1794700 ]
                     }
-                ]
+                ],
             }
         ],
-        "games": [ { "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2", "answer": "droit" } ],
+        "games": [ { "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba", "answer": "droit" } ],
         "rounds_per_game": 6,
         "letters_per_word": 5
     }
