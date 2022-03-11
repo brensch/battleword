@@ -139,8 +139,15 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	gamesWon := 0
+	for _, game := range us.GamesPlayed {
+		if game.Correct {
+			gamesWon++
+		}
+	}
+
 	finalStateJSON, _ := json.Marshal(finalState)
 
-	log.Printf("Game %s concluded, and the engine sent me the final state. Body: %s", finalState.Results.UUID, finalStateJSON)
+	log.Printf("Match %s concluded, we got %d words right. Body: %s", finalState.Results.UUID, gamesWon, finalStateJSON)
 
 }
