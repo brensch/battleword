@@ -56,6 +56,9 @@ type GuessResult struct {
 type PlayerGameState struct {
 	GameID string `json:"game_id,omitempty"`
 
+	Start  time.Time `json:"start,omitempty"`
+	Finish time.Time `json:"finish,omitempty"`
+
 	GuessResults []GuessResult `json:"guess_results,omitempty"`
 
 	Correct bool   `json:"correct,omitempty"`
@@ -174,13 +177,15 @@ func PlayGame(ctx context.Context, log logrus.FieldLogger, c PlayerConnection, g
 
 	state := PlayerGameState{
 		GameID: g.ID,
+		Start:  time.Now(),
 	}
 	log = log.WithField("game_id", g.ID)
-	log.Debug("queued getting next playergamestate")
+	log.Info("player started game")
 
 	for {
 		if ctx.Err() != nil {
 			state.Error = "match was cancelled"
+			state.Finish = time.Now()
 			return state
 		}
 
@@ -188,9 +193,12 @@ func PlayGame(ctx context.Context, log logrus.FieldLogger, c PlayerConnection, g
 
 		// https://i.redd.it/cw0cedsc93h81.jpg
 		if state.Correct || state.Error != "" || len(state.GuessResults) == g.numRounds {
+			state.Finish = time.Now()
+			log.Info("player finished game")
 			return state
 		}
 	}
+
 }
 
 // this struct includes the player's id to give them certainty about who they were
@@ -200,6 +208,8 @@ type PlayerMatchResults struct {
 }
 
 func (p *Player) BroadcastMatch(m MatchSnapshot) error {
+
+	p.log.Info("Broadcasting match results")
 
 	results := PlayerMatchResults{
 		PlayerID: p.ID,
