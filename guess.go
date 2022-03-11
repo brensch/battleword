@@ -26,7 +26,7 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 	log.WithFields(logrus.Fields{
 		"turn": len(s.GuessResults),
 	}).
-		Debug("queued getting next playergamestate")
+		Debug("queued getting guess")
 
 	guessesJson, err := json.Marshal(s)
 	if err != nil {
@@ -37,7 +37,7 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s/guess", c.uri), bytes.NewReader(guessesJson))
 	if err != nil {
-		log.WithError(err).Error("failed to form request")
+		log.WithError(err).Error("failed to form guess request")
 		s.Error = err.Error()
 		return s
 	}
@@ -49,18 +49,21 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 	c.concurrentConnectionLimiter <- struct{}{}
 	defer func() { <-c.concurrentConnectionLimiter }()
 
-	log.Debug("started getting next playergamestate")
+	log.Debug("started getting guess")
 
 	start := time.Now()
 	res, err := c.client.Do(req)
 	if err != nil {
-		log.WithError(err).Error("failed to get player guess")
+		log.WithError(err).Error("failed to get guess")
 		s.Error = err.Error()
 		return s
 	}
 	defer res.Body.Close()
 	finish := time.Now()
-	guessDuration := time.Since(start)
+
+	log.Debug("finished getting guess")
+
+	guessDuration := finish.Sub(start)
 
 	// want to get full bytes of what player sent to help them out
 	guessBytes, err := io.ReadAll(res.Body)
@@ -73,7 +76,7 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 	var guess Guess
 	err = json.Unmarshal(guessBytes, &guess)
 	if err != nil {
-		log.WithError(err).Error("failed to decode player response")
+		log.WithError(err).Error("failed to decode player guess response")
 		s.Error = err.Error()
 		return s
 	}
@@ -102,8 +105,6 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 	if guess.Guess == answer {
 		s.Correct = true
 	}
-
-	log.Debug("successfully got next playergamestate")
 
 	return s
 }
