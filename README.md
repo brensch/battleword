@@ -85,87 +85,98 @@ Once all players are finished, the engine will send you the results of everyone 
 #### Request:
 ```json
 {
-    "player_id": "a89483bc-a35d-41d5-a168-31b9c5cee4a4",
+    "player_id": "fc1ea6b0-b5c7-4844-a34c-09acaaea8865",
     "results": {
-        "uuid": "ced8aa1b-68f8-48e0-bf90-9bbdc2e9ee73",
+        "match_id": "2f2ab3b8-ed36-4208-b28e-9b05e3750bee",
         "players": [
             {
-                "id": "a89483bc-a35d-41d5-a168-31b9c5cee4a4",
-                "definition": {
-                    "name": "schwordler",
-                    "description": "the brave"
-                },
-                "games_played": [
-                    {
-                        "game_id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5",
-                        "guess_results": [
-                            {
-                                "guess": "crane",
-                                "result": [ 0, 1, 0, 0, 2 ]
-                            },
-                            {
-                                "guess": "louse",
-                                "result": [ 0, 0, 1, 0, 2 ]
-                            },
-                            {
-                                "guess": "merge",
-                                "result": [ 0, 0, 2, 2, 2 ]
-                            },
-                            {
-                                "guess": "dirge",
-                                "result": [ 0, 0, 2, 2, 2 ]
-                            },
-                            {
-                                "guess": "purge",
-                                "result": [ 2, 2, 2, 2, 2 ]
-                            }
-                        ],
-                        "correct": true,
-                        "guess_durations_ns": [ 1794600, 8304200, 1550200, 798000, 720800 ]
-                    }
-                ]
-            },
-            {
-                "id": "32ad3a51-eb04-44e7-ae42-1bbefc3bb080",
+                "player_id": "fc1ea6b0-b5c7-4844-a34c-09acaaea8865",
                 "definition": {
                     "name": "solvo",
                     "description": "the magnificent"
                 },
                 "games_played": [
                     {
-                        "game_id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5",
+                        "game_id": "ce593360-622f-4f22-9d32-f5b5163ef770",
                         "guess_results": [
                             {
-                                "guess": "aider",
-                                "result": [ 0, 0, 0, 1, 1 ]
-                            },
-                            {
-                                "guess": "stash",
+                                "guess_id": "2cd00859-8889-4a68-a711-d283b454ce2c",
+                                "guess": "gully",
                                 "result": [ 0, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess": "guess",
-                                "result": [ 1, 2, 1, 0, 0 ]
-                            },
-                            {
-                                "guess": "quash",
-                                "result": [ 0, 2, 0, 0, 0 ]
-                            },
-                            {
-                                "guess": "talon",
+                                "guess_id": "67347ea2-388f-4204-9957-dea8ae011a99",
+                                "guess": "revue",
                                 "result": [ 0, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess": "poesy",
-                                "result": [ 2, 0, 1, 0, 0 ]
+                                "guess_id": "065e2c3e-d7c7-456f-803d-4e8f7a5df01a",
+                                "guess": "scare",
+                                "result": [ 0, 1, 2, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "b1612e80-8f4b-4b7d-914f-a54c77f8689f",
+                                "guess": "nerve",
+                                "result": [ 0, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "51735551-8b36-4254-a49a-6038def72c72",
+                                "guess": "creed",
+                                "result": [ 2, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "9839c3c6-525c-475f-9acd-6c8ca2b2d803",
+                                "guess": "chasm",
+                                "result": [ 2, 2, 2, 0, 1 ]
                             }
                         ],
-                        "guess_durations_ns": [ 1885100, 582700, 449700, 559800, 549800, 503400 ]
+                        "guess_durations_ns": [ 1001797000, 1001040500, 1000737700, 1000751600, 1000742800, 1001051500 ]
+                    }
+                ]
+            },
+            {
+                "player_id": "908f08bf-922a-4d3e-82a6-946e4548910f",
+                "definition": {
+                    "name": "schwordler",
+                    "description": "the brave"
+                },
+                "games_played": [
+                    {
+                        "game_id": "ce593360-622f-4f22-9d32-f5b5163ef770",
+                        "guess_results": [
+                            {
+                                "guess_id": "6cd20f1a-898c-4e11-9bc2-71eae9ae9f76",
+                                "guess": "crane",
+                                "result": [ 2, 0, 2, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "83116bd4-5daf-4529-988b-d226ddc5a74e",
+                                "guess": "chasm",
+                                "result": [ 2, 2, 2, 0, 1 ]
+                            },
+                            {
+                                "guess_id": "9b636e82-6fae-49eb-80a7-c706dc930d58",
+                                "guess": "chalk",
+                                "result": [ 2, 2, 2, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "7bba4f1e-4d6e-4c8a-bdb7-ff5e32c99b96",
+                                "guess": "chaff",
+                                "result": [ 2, 2, 2, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "4c9fd232-453c-492d-ade6-c6b8013c3338",
+                                "guess": "champ",
+                                "result": [ 2, 2, 2, 2, 2 ]
+                            }
+                        ],
+                        "correct": true,
+                        "guess_durations_ns": [ 1309700, 978400, 1045300, 1093200, 1063800 ]
                     }
                 ]
             }
         ],
-        "games": [ { "id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5", "answer": "purge" } ],
+        "games": [ { "game_id": "ce593360-622f-4f22-9d32-f5b5163ef770", "answer": "champ" } ],
         "rounds_per_game": 6,
         "letters_per_word": 5
     }
