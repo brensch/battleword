@@ -83,7 +83,7 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 		Shout: RandomShout(),
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 
 	err = json.NewEncoder(w).Encode(guess)
 	if err != nil {
