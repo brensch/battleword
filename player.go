@@ -19,7 +19,7 @@ type Player struct {
 	Definition  PlayerDefinition  `json:"definition,omitempty"`
 	GamesPlayed []PlayerGameState `json:"games_played,omitempty"`
 
-	FinishTime time.Time `json:"finish_time,omitempty"`
+	Finish time.Time `json:"finish,omitempty"`
 
 	connection PlayerConnection
 
@@ -175,7 +175,7 @@ func (p *Player) PlayMatch(ctx context.Context, games []Game) {
 	wgListen.Wait()
 
 	p.mu.Lock()
-	p.FinishTime = time.Now()
+	p.Finish = time.Now()
 	p.mu.Unlock()
 
 	log.Info("player finished match")
