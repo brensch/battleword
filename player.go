@@ -49,6 +49,9 @@ const (
 type GuessResult struct {
 	ID string `json:"guess_id,omitempty"`
 
+	Start  time.Time `json:"start,omitempty"`
+	Finish time.Time `json:"finish,omitempty"`
+
 	Guess  string `json:"guess,omitempty"`
 	Result []int  `json:"result,omitempty"`
 }
@@ -170,6 +173,11 @@ func (p *Player) PlayMatch(ctx context.Context, games []Game) {
 	wgGenerate.Wait()
 	close(gameStateCHAN)
 	wgListen.Wait()
+
+	p.mu.Lock()
+	p.FinishTime = time.Now()
+	p.mu.Unlock()
+
 	log.Info("player finished match")
 }
 

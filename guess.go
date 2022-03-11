@@ -59,7 +59,7 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 		return s
 	}
 	defer res.Body.Close()
-
+	finish := time.Now()
 	guessDuration := time.Since(start)
 
 	// want to get full bytes of what player sent to help them out
@@ -90,6 +90,9 @@ func GetNextState(ctx context.Context, log logrus.FieldLogger, c PlayerConnectio
 		ID:     id,
 		Result: result,
 		Guess:  guess.Guess,
+
+		Start:  start,
+		Finish: finish,
 	}
 
 	s.GuessResults = append(s.GuessResults, guessResult)
