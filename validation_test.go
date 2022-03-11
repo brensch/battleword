@@ -40,8 +40,8 @@ func TestGetResults(t *testing.T) {
 		result := GetResult(testCase.guess, testCase.answer)
 
 		// compare each character in the result
-		for i := 0; i < len(result.Result); i++ {
-			if result.Result[i] != testCase.result[i] {
+		for i := 0; i < len(result); i++ {
+			if result[i] != testCase.result[i] {
 				t.Logf(
 					"got mismatch. guess: %s, answer %s, result %+v, expected result %+v",
 					testCase.guess,

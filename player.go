@@ -39,7 +39,13 @@ type PlayerConnection struct {
 	concurrentConnectionLimiter chan struct{}
 }
 
+const (
+	GuessIDHeader = "guessID"
+)
+
 type GuessResult struct {
+	ID string `json:"id,omitempty"`
+
 	Guess  string `json:"guess,omitempty"`
 	Result []int  `json:"result,omitempty"`
 }
@@ -188,6 +194,10 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) PlayerGa
 		return s
 	}
 
+	id := uuid.New().String()
+
+	req.Header.Add(GuessIDHeader, id)
+
 	// Make sure we don't go over the concurrent connection limit for this player.
 	c.concurrentConnectionLimiter <- struct{}{}
 	defer func() { <-c.concurrentConnectionLimiter }()
@@ -216,11 +226,17 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) PlayerGa
 
 	result := GetResult(guess.Guess, answer)
 
-	s.GuessResults = append(s.GuessResults, result)
+	guessResult := GuessResult{
+		ID:     id,
+		Result: result,
+		Guess:  guess.Guess,
+	}
+
+	s.GuessResults = append(s.GuessResults, guessResult)
 	s.GuessDurationsNS = append(s.GuessDurationsNS, guessDuration.Nanoseconds())
 	s.shouts = append(s.shouts, guess.Shout)
 
-	if result.Guess == answer {
+	if guess.Guess == answer {
 		s.Correct = true
 	}
 
