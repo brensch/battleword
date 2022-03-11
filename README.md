@@ -35,26 +35,30 @@ The engine will hit your api here with the previous results of a game. You are e
 #### Request:
 ```json
 {
-    "game_id": "c975280b-5ff8-47e1-a384-843e803dceef",
+    "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2",
     "guess_results": [
         {
-            "guess": "crane",
-            "result": [ 0, 1, 1, 0, 0 ]
+            "guess_id": "950b240e-7f55-4585-b51e-37bd950c590f",
+            "guess": "reach",
+            "result": [ 1, 0, 0, 0, 0 ]
         },
         {
-            "guess": "solar",
-            "result": [ 0, 0, 0, 1, 1 ]
+            "guess_id": "e0086c47-c094-41d0-bbea-dc587b385e9e",
+            "guess": "titan",
+            "result": [ 1, 1, 0, 0, 0 ]
         },
         {
-            "guess": "party",
-            "result": [ 0, 1, 1, 0, 0 ]
+            "guess_id": "e2a233f8-2e1d-4d74-8ce6-df0f419053f2",
+            "guess": "rajah",
+            "result": [ 1, 0, 0, 0, 0 ]
         },
         {
-            "guess": "guava",
-            "result": [ 0, 2, 0, 0, 2 ]
+            "guess_id": "2b84c35e-abc2-4aef-87c9-3a90eb77b976",
+            "guess": "imbue",
+            "result": [ 1, 0, 0, 0, 0 ]
         }
     ],
-    "guess_durations_ns": [ 880900, 67876700, 2913600, 1261100 ]
+    "guess_durations_ns": [ 1001874500, 1000829600, 1000972000, 1000716200 ]
 }
 ```
 #### Response:
@@ -85,98 +89,83 @@ Once all players are finished, the engine will send you the results of everyone 
 #### Request:
 ```json
 {
-    "player_id": "fc1ea6b0-b5c7-4844-a34c-09acaaea8865",
+    "player_id": "96abf359-1c33-4293-aeff-51bef796ee1d",
     "results": {
-        "match_id": "2f2ab3b8-ed36-4208-b28e-9b05e3750bee",
+        "match_id": "54a479dc-c3f0-461b-a97a-22d8aafcee4e",
         "players": [
             {
-                "player_id": "fc1ea6b0-b5c7-4844-a34c-09acaaea8865",
+                "player_id": "96abf359-1c33-4293-aeff-51bef796ee1d",
                 "definition": {
                     "name": "solvo",
                     "description": "the magnificent"
                 },
                 "games_played": [
                     {
-                        "game_id": "ce593360-622f-4f22-9d32-f5b5163ef770",
+                        "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2",
                         "guess_results": [
                             {
-                                "guess_id": "2cd00859-8889-4a68-a711-d283b454ce2c",
-                                "guess": "gully",
+                                "guess_id": "950b240e-7f55-4585-b51e-37bd950c590f",
+                                "guess": "reach",
+                                "result": [ 1, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "e0086c47-c094-41d0-bbea-dc587b385e9e",
+                                "guess": "titan",
+                                "result": [ 1, 1, 0, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "e2a233f8-2e1d-4d74-8ce6-df0f419053f2",
+                                "guess": "rajah",
+                                "result": [ 1, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "2b84c35e-abc2-4aef-87c9-3a90eb77b976",
+                                "guess": "imbue",
+                                "result": [ 1, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess_id": "fb68b729-5445-4a41-a7a3-c4a3ee305759",
+                                "guess": "funky",
                                 "result": [ 0, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess_id": "67347ea2-388f-4204-9957-dea8ae011a99",
-                                "guess": "revue",
+                                "guess_id": "fce2024e-a2b3-4d4e-9806-2b7c44d1b5b5",
+                                "guess": "kneel",
                                 "result": [ 0, 0, 0, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "065e2c3e-d7c7-456f-803d-4e8f7a5df01a",
-                                "guess": "scare",
-                                "result": [ 0, 1, 2, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "b1612e80-8f4b-4b7d-914f-a54c77f8689f",
-                                "guess": "nerve",
-                                "result": [ 0, 0, 0, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "51735551-8b36-4254-a49a-6038def72c72",
-                                "guess": "creed",
-                                "result": [ 2, 0, 0, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "9839c3c6-525c-475f-9acd-6c8ca2b2d803",
-                                "guess": "chasm",
-                                "result": [ 2, 2, 2, 0, 1 ]
                             }
                         ],
-                        "guess_durations_ns": [ 1001797000, 1001040500, 1000737700, 1000751600, 1000742800, 1001051500 ]
+                        "guess_durations_ns": [ 1001874500, 1000829600, 1000972000, 1000716200, 1000844600, 1000734400 ]
                     }
                 ]
             },
             {
-                "player_id": "908f08bf-922a-4d3e-82a6-946e4548910f",
+                "player_id": "ad249978-1d49-4e24-bff7-bd1e1c7fcca6",
                 "definition": {
                     "name": "schwordler",
                     "description": "the brave"
                 },
                 "games_played": [
                     {
-                        "game_id": "ce593360-622f-4f22-9d32-f5b5163ef770",
+                        "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2",
                         "guess_results": [
                             {
-                                "guess_id": "6cd20f1a-898c-4e11-9bc2-71eae9ae9f76",
+                                "guess_id": "f8be7f56-8efa-4dfd-b9df-af3765f7c28e",
                                 "guess": "crane",
-                                "result": [ 2, 0, 2, 0, 0 ]
+                                "result": [ 0, 2, 0, 0, 0 ]
                             },
                             {
-                                "guess_id": "83116bd4-5daf-4529-988b-d226ddc5a74e",
-                                "guess": "chasm",
-                                "result": [ 2, 2, 2, 0, 1 ]
-                            },
-                            {
-                                "guess_id": "9b636e82-6fae-49eb-80a7-c706dc930d58",
-                                "guess": "chalk",
-                                "result": [ 2, 2, 2, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "7bba4f1e-4d6e-4c8a-bdb7-ff5e32c99b96",
-                                "guess": "chaff",
-                                "result": [ 2, 2, 2, 0, 0 ]
-                            },
-                            {
-                                "guess_id": "4c9fd232-453c-492d-ade6-c6b8013c3338",
-                                "guess": "champ",
+                                "guess_id": "3a804ca6-8f15-4e12-b561-81b82cc4aad2",
+                                "guess": "droit",
                                 "result": [ 2, 2, 2, 2, 2 ]
                             }
                         ],
                         "correct": true,
-                        "guess_durations_ns": [ 1309700, 978400, 1045300, 1093200, 1063800 ]
+                        "guess_durations_ns": [ 1458600, 1386800 ]
                     }
                 ]
             }
         ],
-        "games": [ { "game_id": "ce593360-622f-4f22-9d32-f5b5163ef770", "answer": "champ" } ],
+        "games": [ { "game_id": "37f77f29-5865-477c-9bef-ca01d22483c2", "answer": "droit" } ],
         "rounds_per_game": 6,
         "letters_per_word": 5
     }
