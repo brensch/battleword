@@ -182,6 +182,9 @@ func (m *Match) Snapshot() MatchSnapshot {
 		Players:        decoupledPlayers,
 		RoundsPerGame:  m.numRounds,
 		LettersPerWord: m.numLetters,
+
+		Start: m.start,
+		End:   m.end,
 	}
 
 }
