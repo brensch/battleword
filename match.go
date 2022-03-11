@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -15,6 +16,9 @@ type Match struct {
 
 	players []*Player
 	games   []Game
+
+	start time.Time
+	end   time.Time
 
 	numRounds  int
 	numLetters int
@@ -32,6 +36,9 @@ type Match struct {
 type MatchSnapshot struct {
 	UUID string `json:"match_id,omitempty"`
 
+	Start time.Time `json:"start,omitempty"`
+	End   time.Time `json:"end,omitempty"`
+
 	Players []Player `json:"players,omitempty"`
 	Games   []Game   `json:"games,omitempty"`
 
@@ -40,9 +47,9 @@ type MatchSnapshot struct {
 }
 
 // InitMatch generates all the games for the match and populates player information and other match level metadata
-func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
+func InitMatch(log logrus.FieldLogger, allWords, commonWords []string, playerURIs []string, numLetters, numRounds, numGames int) (*Match, error) {
 	id := uuid.NewString()
-	log := parentLog.WithField("match_id", id)
+	log = log.WithField("match_id", id)
 	mu := &sync.Mutex{}
 
 	// this could be a large number so preallocate for speed
@@ -132,6 +139,7 @@ func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, pla
 func (m *Match) Start(ctx context.Context) {
 
 	m.log.Info("match started")
+	m.start = time.Now()
 
 	var wg sync.WaitGroup
 
@@ -144,6 +152,7 @@ func (m *Match) Start(ctx context.Context) {
 	}
 
 	wg.Wait()
+	m.end = time.Now()
 	m.log.Info("match finished")
 
 }

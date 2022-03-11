@@ -19,6 +19,8 @@ type Player struct {
 	Definition  PlayerDefinition  `json:"definition,omitempty"`
 	GamesPlayed []PlayerGameState `json:"games_played,omitempty"`
 
+	FinishTime time.Time `json:"finish_time,omitempty"`
+
 	connection PlayerConnection
 
 	mu  *sync.Mutex
@@ -129,7 +131,7 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 }
 
 func (p *Player) PlayMatch(ctx context.Context, games []Game) {
-
+	log := p.log.WithField("player_id", p.ID)
 	var wgGenerate, wgListen sync.WaitGroup
 	// this is buffered since we may get mutexed out of appending to the gamestate list
 	// temporarily
@@ -145,17 +147,27 @@ func (p *Player) PlayMatch(ctx context.Context, games []Game) {
 		}
 	}()
 
+	// This is used so that the games themselves are staggered.
+	// Was noticing that when you start all the games at once you don't get any finished until the very end.
+	gameStaggerCHAN := make(chan struct{}, p.Definition.ConcurrentConnLimit+2)
+
 	for _, game := range games {
 		wgGenerate.Add(1)
 		go func(game Game) {
 			defer wgGenerate.Done()
-			gameStateCHAN <- PlayGame(ctx, p.log.WithField("player_id", p.ID), p.connection, game)
+
+			// only start playing the game when there's no more than the concurrent connection limit going on at once
+			gameStaggerCHAN <- struct{}{}
+			defer func() { <-gameStaggerCHAN }()
+
+			gameStateCHAN <- PlayGame(ctx, log, p.connection, game)
 		}(game)
 	}
 
 	wgGenerate.Wait()
 	close(gameStateCHAN)
 	wgListen.Wait()
+	log.Info("player finished match")
 }
 
 func PlayGame(ctx context.Context, log logrus.FieldLogger, c PlayerConnection, g Game) PlayerGameState {
