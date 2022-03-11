@@ -74,12 +74,15 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 
 	word := GuessWord()
 
-	log.Printf("received guess id %s, making random guess %s", r.Header.Get(battleword.GuessIDHeader), word)
+	prevGuessesJSON, _ := json.Marshal(prevGuesses)
+	log.Printf("Received guess request ID %s. Body: %s\n", r.Header.Get(battleword.GuessIDHeader), prevGuessesJSON)
+	log.Printf("Making random guess for game %s, turn %d: %s\n", r.Header.Get(battleword.GuessIDHeader), len(prevGuesses.GuessResults), word)
 
 	guess := battleword.Guess{
 		Guess: word,
 		Shout: RandomShout(),
 	}
+
 	time.Sleep(1 * time.Second)
 
 	err = json.NewEncoder(w).Encode(guess)
@@ -132,17 +135,12 @@ func ReceiveResults(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !found {
-		log.Println("we weren't in the results. strange")
+		log.Println("We weren't in the results. strange")
 		return
 	}
 
 	finalStateJSON, _ := json.Marshal(finalState)
 
-	log.Println("the game concluded, and the engine sent me the final state for all players:", string(finalStateJSON))
-	log.Println("we had ID: ", us.ID)
-	// TODO: add helper functions back in to do this.
-	// log.Printf("accuracy: %f%%", float64(us.Summary.GamesWon)/float64(len(finalState.Results.Games)))
-	// log.Printf("speed: %s", us.Summary.TotalTime)
-	// log.Printf("average guesses: %f", float64(us.Summary.TotalGuesses)/float64(len(finalState.Results.Games)))
+	log.Printf("Game %s concluded, and the engine sent me the final state. Body: %s", finalState.Results.UUID, finalStateJSON)
 
 }
