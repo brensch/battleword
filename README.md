@@ -81,122 +81,95 @@ GET request - no payload
 There will be more things here in the future. stay posted.
 
 ### /results
-Once all players are finished, the engine will send you the results of everyone in the match. No response is required, except maybe to message your friends to brag. The below body is just one player, if there were multiple you'd see more objects in the `players` array.
+Once all players are finished, the engine will send you the results of everyone in the match. No response is required, except maybe to message your friends to brag. `player_id` represents your ID, look for the corresponding player in the `players` array to see how you went.
 #### Request:
 ```json
 {
-    "uuid": "e4d817ef-778c-422f-ad50-fd3b749eaefa",
-    "players": [
-        {
-            "id": "da6c26ce-0234-40f0-8d79-3d03249bd770",
-            "definition": {
-                "name": "schwordler",
-                "description": "the brave"
+    "player_id": "a89483bc-a35d-41d5-a168-31b9c5cee4a4",
+    "results": {
+        "uuid": "ced8aa1b-68f8-48e0-bf90-9bbdc2e9ee73",
+        "players": [
+            {
+                "id": "a89483bc-a35d-41d5-a168-31b9c5cee4a4",
+                "definition": {
+                    "name": "schwordler",
+                    "description": "the brave"
+                },
+                "games_played": [
+                    {
+                        "game_id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5",
+                        "guess_results": [
+                            {
+                                "guess": "crane",
+                                "result": [ 0, 1, 0, 0, 2 ]
+                            },
+                            {
+                                "guess": "louse",
+                                "result": [ 0, 0, 1, 0, 2 ]
+                            },
+                            {
+                                "guess": "merge",
+                                "result": [ 0, 0, 2, 2, 2 ]
+                            },
+                            {
+                                "guess": "dirge",
+                                "result": [ 0, 0, 2, 2, 2 ]
+                            },
+                            {
+                                "guess": "purge",
+                                "result": [ 2, 2, 2, 2, 2 ]
+                            }
+                        ],
+                        "correct": true,
+                        "guess_durations_ns": [ 1794600, 8304200, 1550200, 798000, 720800 ]
+                    }
+                ]
             },
-            "games_played": [
-                {
-                    "game_id": "8ab55e9b-04ef-4d86-adc1-38f522ad2b68",
-                    "guess_results": [
-                        {
-                            "guess": "crane",
-                            "result": [ 0, 0, 0, 0, 0 ]
-                        },
-                        {
-                            "guess": "lousy",
-                            "result": [ 1, 1, 0, 0, 0 ]
-                        },
-                        {
-                            "guess": "fight",
-                            "result": [ 0, 2, 0, 0, 2 ]
-                        },
-                        {
-                            "guess": "pivot",
-                            "result": [ 2, 2, 0, 2, 2 ]
-                        },
-                        {
-                            "guess": "pilot",
-                            "result": [ 2, 2, 2, 2, 2 ]
-                        }
-                    ],
-                    "guess_durations_ns": [ 610200, 27952000, 2574200, 1087400, 1776400 ]
+            {
+                "id": "32ad3a51-eb04-44e7-ae42-1bbefc3bb080",
+                "definition": {
+                    "name": "solvo",
+                    "description": "the magnificent"
                 },
-                {
-                    "game_id": "fed87c2e-a2e1-4f2b-842e-8c7e2990f2e9",
-                    "guess_results": [
-                        {
-                            "guess": "crane",
-                            "result": [ 1, 0, 0, 0, 0 ]
-                        },
-                        {
-                            "guess": "lousy",
-                            "result": [ 0, 1, 0, 1, 0 ]
-                        },
-                        {
-                            "guess": "smith",
-                            "result": [ 2, 0, 0, 0, 0 ]
-                        },
-                        {
-                            "guess": "spook",
-                            "result": [ 2, 1, 2, 2, 0 ]
-                        },
-                        {
-                            "guess": "swoop",
-                            "result": [ 2, 0, 2, 2, 2 ]
-                        },
-                        {
-                            "guess": "scoop",
-                            "result": [ 2, 2, 2, 2, 2 ]
-                        }
-                    ],
-                    "guess_durations_ns": [ 1104800, 37972900, 1881100, 915000, 910100, 735900 ]
-                },
-                {
-                    "game_id": "17fc1e3a-233e-4185-aa35-d4a138eec7f1",
-                    "guess_results": [
-                        {
-                            "guess": "crane",
-                            "result": [ 0, 0, 1, 0, 1 ]
-                        },
-                        {
-                            "guess": "salty",
-                            "result": [ 0, 1, 2, 0, 2 ]
-                        },
-                        {
-                            "guess": "alloy",
-                            "result": [ 1, 0, 2, 0, 2 ]
-                        },
-                        {
-                            "guess": "milky",
-                            "result": [ 0, 0, 2, 0, 2 ]
-                        },
-                        {
-                            "guess": "delay",
-                            "result": [ 2, 2, 2, 2, 2 ]
-                        }
-                    ],
-                    "guess_durations_ns": [ 1642600, 67321300, 713900, 998700, 642200 ]
-                }
-            ]
-        }
-    ],
-    "games": [
-        {
-            "id": "8ab55e9b-04ef-4d86-adc1-38f522ad2b68",
-            "answer": "pilot"
-        },
-        {
-            "id": "17fc1e3a-233e-4185-aa35-d4a138eec7f1",
-            "answer": "delay"
-        },
-        {
-            "id": "fed87c2e-a2e1-4f2b-842e-8c7e2990f2e9",
-            "answer": "scoop"
-        }
-    ],
-    "rounds_per_game": 6,
-    "letters_per_word": 5
+                "games_played": [
+                    {
+                        "game_id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5",
+                        "guess_results": [
+                            {
+                                "guess": "aider",
+                                "result": [ 0, 0, 0, 1, 1 ]
+                            },
+                            {
+                                "guess": "stash",
+                                "result": [ 0, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess": "guess",
+                                "result": [ 1, 2, 1, 0, 0 ]
+                            },
+                            {
+                                "guess": "quash",
+                                "result": [ 0, 2, 0, 0, 0 ]
+                            },
+                            {
+                                "guess": "talon",
+                                "result": [ 0, 0, 0, 0, 0 ]
+                            },
+                            {
+                                "guess": "poesy",
+                                "result": [ 2, 0, 1, 0, 0 ]
+                            }
+                        ],
+                        "guess_durations_ns": [ 1885100, 582700, 449700, 559800, 549800, 503400 ]
+                    }
+                ]
+            }
+        ],
+        "games": [ { "id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5", "answer": "purge" } ],
+        "rounds_per_game": 6,
+        "letters_per_word": 5
+    }
 }
-
 ```
 
 ### Releasing
