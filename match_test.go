@@ -1,6 +1,7 @@
 package battleword
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -60,5 +61,5 @@ func TestMatchStart(t *testing.T) {
 		return
 	}
 
-	match.Start()
+	match.Start(context.Background())
 }

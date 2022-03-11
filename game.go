@@ -8,7 +8,7 @@ import (
 )
 
 type Game struct {
-	ID     string `json:"id,omitempty"`
+	ID     string `json:"game_id,omitempty"`
 	Answer string `json:"answer,omitempty"`
 
 	// Summary *GameSummary `json:"summary,omitempty"`

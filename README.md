@@ -32,29 +32,34 @@ NB these commands are executed in a command line of your choice. Exact syntax ma
 This is what all solvers need to implement.
 ### /guess
 The engine will hit your api here with the previous results of a game. You are expected to respond with your best guess.
+Each `guess_results` object also comes with the start and finish time, plus an ID that correlates to the header `guessID` that gets sent with each request. I've omitted from this JSON for brevity. Solvo prints out the full body when you run him.
 #### Request:
 ```json
 {
-    "game_id": "c975280b-5ff8-47e1-a384-843e803dceef",
+    "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba",
     "guess_results": [
         {
-            "guess": "crane",
-            "result": [ 0, 1, 1, 0, 0 ]
+            "guess": "tense",
+            "result": [ 1, 0, 0, 0, 0 ]
         },
         {
-            "guess": "solar",
-            "result": [ 0, 0, 0, 1, 1 ]
+            "guess": "finer",
+            "result": [ 0, 1, 0, 0, 1 ]
         },
         {
-            "guess": "party",
-            "result": [ 0, 1, 1, 0, 0 ]
+            "guess": "unset",
+            "result": [ 0, 0, 0, 0, 2 ]
         },
         {
-            "guess": "guava",
-            "result": [ 0, 2, 0, 0, 2 ]
+            "guess": "cable",
+            "result": [ 0, 0, 0, 0, 0 ]
+        },
+        {
+            "guess": "deity",
+            "result": [ 2, 0, 1, 1, 0 ]
         }
     ],
-    "guess_durations_ns": [ 880900, 67876700, 2913600, 1261100 ]
+    "guess_durations_ns": [ 1002925700, 1001538400, 1000738000, 1000947200, 1000960600 ]
 }
 ```
 #### Response:
@@ -82,90 +87,79 @@ There will be more things here in the future. stay posted.
 
 ### /results
 Once all players are finished, the engine will send you the results of everyone in the match. No response is required, except maybe to message your friends to brag. `player_id` represents your ID, look for the corresponding player in the `players` array to see how you went.
+As with the request, all objects come with an ID, start, and end time that has been omitted for brevity where unnecessary. Check Solvo for the exact body. 
 #### Request:
 ```json
 {
-    "player_id": "a89483bc-a35d-41d5-a168-31b9c5cee4a4",
+    "player_id": "9fda863c-f303-47da-a8f0-35b0b84b1abe",
     "results": {
-        "uuid": "ced8aa1b-68f8-48e0-bf90-9bbdc2e9ee73",
+        "match_id": "777f785b-d2f9-4467-990e-e2f90efe3b52",
         "players": [
             {
-                "id": "a89483bc-a35d-41d5-a168-31b9c5cee4a4",
-                "definition": {
-                    "name": "schwordler",
-                    "description": "the brave"
-                },
-                "games_played": [
-                    {
-                        "game_id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5",
-                        "guess_results": [
-                            {
-                                "guess": "crane",
-                                "result": [ 0, 1, 0, 0, 2 ]
-                            },
-                            {
-                                "guess": "louse",
-                                "result": [ 0, 0, 1, 0, 2 ]
-                            },
-                            {
-                                "guess": "merge",
-                                "result": [ 0, 0, 2, 2, 2 ]
-                            },
-                            {
-                                "guess": "dirge",
-                                "result": [ 0, 0, 2, 2, 2 ]
-                            },
-                            {
-                                "guess": "purge",
-                                "result": [ 2, 2, 2, 2, 2 ]
-                            }
-                        ],
-                        "correct": true,
-                        "guess_durations_ns": [ 1794600, 8304200, 1550200, 798000, 720800 ]
-                    }
-                ]
-            },
-            {
-                "id": "32ad3a51-eb04-44e7-ae42-1bbefc3bb080",
+                "player_id": "9fda863c-f303-47da-a8f0-35b0b84b1abe",
                 "definition": {
                     "name": "solvo",
                     "description": "the magnificent"
                 },
                 "games_played": [
                     {
-                        "game_id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5",
+                        "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba",
                         "guess_results": [
                             {
-                                "guess": "aider",
-                                "result": [ 0, 0, 0, 1, 1 ]
+                                "guess": "tense",
+                                "result": [ 1, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess": "stash",
+                                "guess": "finer",
+                                "result": [ 0, 1, 0, 0, 1 ]
+                            },
+                            {
+                                "guess": "unset",
+                                "result": [ 0, 0, 0, 0, 2 ]
+                            },
+                            {
+                                "guess": "cable",
                                 "result": [ 0, 0, 0, 0, 0 ]
                             },
                             {
-                                "guess": "guess",
-                                "result": [ 1, 2, 1, 0, 0 ]
+                                "guess": "deity",
+                                "result": [ 2, 0, 1, 1, 0 ]
                             },
                             {
-                                "guess": "quash",
+                                "guess": "deter",
+                                "result": [ 2, 0, 1, 0, 1 ]
+                            }
+                        ],
+                        "guess_durations_ns": [ 1002925700, 1001538400, 1000738000, 1000947200, 1000960600, 1001443500 ]
+                    }
+                ],
+            },
+            {
+                "player_id": "b6f3c0ed-c885-4253-8d23-725def324c55",
+                "definition": {
+                    "name": "schwordler",
+                    "description": "the brave"
+                },
+                "games_played": [
+                    {
+                        "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba",
+                        "guess_results": [
+                            {
+                                "guess": "crane",
                                 "result": [ 0, 2, 0, 0, 0 ]
                             },
                             {
-                                "guess": "talon",
-                                "result": [ 0, 0, 0, 0, 0 ]
-                            },
-                            {
-                                "guess": "poesy",
-                                "result": [ 2, 0, 1, 0, 0 ]
+                                "guess": "droit",
+                                "result": [ 2, 2, 2, 2, 2 ]
                             }
                         ],
-                        "guess_durations_ns": [ 1885100, 582700, 449700, 559800, 549800, 503400 ]
+                        "correct": true,
+                        "guess_durations_ns": [ 2135600, 1794700 ]
                     }
-                ]
+                ],
             }
         ],
-        "games": [ { "id": "40dd7298-c5fd-4567-b666-04d0a6cd8dc5", "answer": "purge" } ],
+        "games": [ { "game_id": "3bead1b6-cd41-4bd0-9ec0-9b451319efba", "answer": "droit" } ],
         "rounds_per_game": 6,
         "letters_per_word": 5
     }

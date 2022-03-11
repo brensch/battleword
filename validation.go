@@ -26,7 +26,7 @@ func ValidGuess(guess, answer string) bool {
 	return false
 }
 
-func GetResult(guess, answer string) GuessResult {
+func GetResult(guess, answer string) []int {
 
 	result := make([]int, len(answer))
 	guessRunes := []rune(guess)
@@ -62,8 +62,9 @@ func GetResult(guess, answer string) GuessResult {
 
 	}
 
-	return GuessResult{
-		Guess:  guess,
-		Result: result,
-	}
+	return result
+	// GuessResult{
+	// 	Guess:  guess,
+	// 	Result: result,
+	// }
 }
