@@ -156,22 +156,12 @@ func PlayGame(c PlayerConnection, g Game) PlayerGameState {
 	state := PlayerGameState{
 		GameID: g.ID,
 	}
-	var err error
 
 	for {
-		state, err = GetNextState(c, state, g.Answer)
-		if err != nil {
-			state.Error = err.Error()
-			return state
-		}
-
-		if state.Correct {
-			state.Correct = true
-			return state
-		}
+		state = GetNextState(c, state, g.Answer)
 
 		// https://i.redd.it/cw0cedsc93h81.jpg
-		if len(state.GuessResults) == g.numRounds {
+		if state.Correct || state.Error != "" || len(state.GuessResults) == g.numRounds {
 			return state
 		}
 	}
@@ -184,16 +174,18 @@ type Guess struct {
 	Shout string `json:"shout,omitempty"`
 }
 
-func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerGameState, error) {
+func GetNextState(c PlayerConnection, s PlayerGameState, answer string) PlayerGameState {
 
 	guessesJson, err := json.Marshal(s)
 	if err != nil {
-		return PlayerGameState{}, err
+		s.Error = err.Error()
+		return s
 	}
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/guess", c.uri), bytes.NewReader(guessesJson))
 	if err != nil {
-		return PlayerGameState{}, err
+		s.Error = err.Error()
+		return s
 	}
 
 	// Make sure we don't go over the concurrent connection limit for this player.
@@ -203,7 +195,8 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerG
 	start := time.Now()
 	res, err := c.client.Do(req)
 	if err != nil {
-		return PlayerGameState{}, err
+		s.Error = err.Error()
+		return s
 	}
 	defer res.Body.Close()
 
@@ -212,11 +205,13 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerG
 	var guess Guess
 	err = json.NewDecoder(res.Body).Decode(&guess)
 	if err != nil {
-		return PlayerGameState{}, err
+		s.Error = err.Error()
+		return s
 	}
 
 	if !ValidGuess(guess.Guess, answer) {
-		return PlayerGameState{}, fmt.Errorf("guess is invalid: %s", guess.Guess)
+		s.Error = fmt.Sprintf("guess is invalid: %s", guess.Guess)
+		return s
 	}
 
 	result := GetResult(guess.Guess, answer)
@@ -229,7 +224,7 @@ func GetNextState(c PlayerConnection, s PlayerGameState, answer string) (PlayerG
 		s.Correct = true
 	}
 
-	return s, nil
+	return s
 }
 
 // this struct includes the player's id to give them certainty about who they were
