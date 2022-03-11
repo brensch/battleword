@@ -2,6 +2,7 @@ package battleword
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -14,7 +15,7 @@ import (
 )
 
 type Player struct {
-	ID          string            `json:"id,omitempty"`
+	ID          string            `json:"player_id,omitempty"`
 	Definition  PlayerDefinition  `json:"definition,omitempty"`
 	GamesPlayed []PlayerGameState `json:"games_played,omitempty"`
 
@@ -44,7 +45,7 @@ const (
 )
 
 type GuessResult struct {
-	ID string `json:"id,omitempty"`
+	ID string `json:"guess_id,omitempty"`
 
 	Guess  string `json:"guess,omitempty"`
 	Result []int  `json:"result,omitempty"`
@@ -127,7 +128,7 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 	}, nil
 }
 
-func (p *Player) PlayMatch(games []Game) {
+func (p *Player) PlayMatch(ctx context.Context, games []Game) {
 
 	var wgGenerate, wgListen sync.WaitGroup
 	// this is buffered since we may get mutexed out of appending to the gamestate list
@@ -148,7 +149,7 @@ func (p *Player) PlayMatch(games []Game) {
 		wgGenerate.Add(1)
 		go func(game Game) {
 			defer wgGenerate.Done()
-			gameStateCHAN <- PlayGame(p.connection, game)
+			gameStateCHAN <- PlayGame(ctx, p.log.WithField("player_id", p.ID), p.connection, game)
 		}(game)
 	}
 
@@ -157,90 +158,27 @@ func (p *Player) PlayMatch(games []Game) {
 	wgListen.Wait()
 }
 
-func PlayGame(c PlayerConnection, g Game) PlayerGameState {
+func PlayGame(ctx context.Context, log logrus.FieldLogger, c PlayerConnection, g Game) PlayerGameState {
 
 	state := PlayerGameState{
 		GameID: g.ID,
 	}
+	log = log.WithField("game_id", g.ID)
+	log.Debug("queued getting next playergamestate")
 
 	for {
-		state = GetNextState(c, state, g.Answer)
+		if ctx.Err() != nil {
+			state.Error = "match was cancelled"
+			return state
+		}
+
+		state = GetNextState(ctx, log, c, state, g.Answer)
 
 		// https://i.redd.it/cw0cedsc93h81.jpg
 		if state.Correct || state.Error != "" || len(state.GuessResults) == g.numRounds {
 			return state
 		}
 	}
-}
-
-type Guess struct {
-	Guess string `json:"guess,omitempty"`
-
-	// For the lols:
-	Shout string `json:"shout,omitempty"`
-}
-
-func GetNextState(c PlayerConnection, s PlayerGameState, answer string) PlayerGameState {
-
-	guessesJson, err := json.Marshal(s)
-	if err != nil {
-		s.Error = err.Error()
-		return s
-	}
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/guess", c.uri), bytes.NewReader(guessesJson))
-	if err != nil {
-		s.Error = err.Error()
-		return s
-	}
-
-	id := uuid.New().String()
-
-	req.Header.Add(GuessIDHeader, id)
-
-	// Make sure we don't go over the concurrent connection limit for this player.
-	c.concurrentConnectionLimiter <- struct{}{}
-	defer func() { <-c.concurrentConnectionLimiter }()
-
-	start := time.Now()
-	res, err := c.client.Do(req)
-	if err != nil {
-		s.Error = err.Error()
-		return s
-	}
-	defer res.Body.Close()
-
-	guessDuration := time.Since(start)
-
-	var guess Guess
-	err = json.NewDecoder(res.Body).Decode(&guess)
-	if err != nil {
-		s.Error = err.Error()
-		return s
-	}
-
-	if !ValidGuess(guess.Guess, answer) {
-		s.Error = fmt.Sprintf("guess is invalid: %s", guess.Guess)
-		return s
-	}
-
-	result := GetResult(guess.Guess, answer)
-
-	guessResult := GuessResult{
-		ID:     id,
-		Result: result,
-		Guess:  guess.Guess,
-	}
-
-	s.GuessResults = append(s.GuessResults, guessResult)
-	s.GuessDurationsNS = append(s.GuessDurationsNS, guessDuration.Nanoseconds())
-	s.shouts = append(s.shouts, guess.Shout)
-
-	if guess.Guess == answer {
-		s.Correct = true
-	}
-
-	return s
 }
 
 // this struct includes the player's id to give them certainty about who they were

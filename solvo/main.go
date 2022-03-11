@@ -72,19 +72,15 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prevGuessesJSON, _ := json.Marshal(prevGuesses)
-
 	word := GuessWord()
 
-	log.Println("received previous state:", string(prevGuessesJSON))
-	log.Println("based on previous state, i will make the completely random guess:", word)
+	log.Printf("received guess id %s, making random guess %s", r.Header.Get(battleword.GuessIDHeader), word)
 
 	guess := battleword.Guess{
 		Guess: word,
 		Shout: RandomShout(),
 	}
-
-	// time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	err = json.NewEncoder(w).Encode(guess)
 	if err != nil {

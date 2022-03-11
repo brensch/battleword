@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -34,13 +35,17 @@ func main() {
 	flag.Parse()
 
 	log := logrus.New()
+	log.SetLevel(logrus.DebugLevel)
 
 	log.Info("started game")
+	log.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
 
 	playerURIs := strings.Split(PlayerURIsJoined, ",")
 
 	if playerURIs[0] == "" {
-		log.Println("you need to define player endpoints")
+		log.Error("you need to define player endpoints")
 		return
 	}
 
@@ -48,29 +53,26 @@ func main() {
 	filename := fmt.Sprintf("results-%s.json", time.Now().Format("20060102-150405-0700"))
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Printf("couldn't create file %s: %+v", filename, err)
+		log.WithError(err).WithField("file", filename).Error("couldn't create file")
 		return
 	}
 	defer f.Close()
 
 	match, err := battleword.InitMatch(log, battleword.AllWords, battleword.CommonWords, playerURIs, NumLetters, NumRounds, NumGames)
 	if err != nil {
-		log.Println("got error initing game", err)
+		log.WithError(err).Error("got error initialising game")
 		return
 	}
 
-	match.Start()
+	match.Start(context.Background())
 	match.Broadcast()
-
-	log.Println("game finished")
-	// gameJSON, _ := json.Marshal(match)
 
 	err = json.NewEncoder(f).Encode(match.Snapshot())
 	if err != nil {
-		log.Println("couldn't write to file", err)
+		log.WithError(err).Error("couldn't write to file")
 		return
 	}
 
-	log.Println("final result saved to file", filename)
+	log.WithField("file", filename).Println("final result saved to file")
 
 }

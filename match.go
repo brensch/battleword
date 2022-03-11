@@ -1,9 +1,9 @@
 package battleword
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/google/uuid"
@@ -30,7 +30,7 @@ type Match struct {
 // MatchSnapshot is what clients can use to get the current state of the game,
 // and what gets sent to the contestants at the end of matches
 type MatchSnapshot struct {
-	UUID string `json:"uuid,omitempty"`
+	UUID string `json:"match_id,omitempty"`
 
 	Players []Player `json:"players,omitempty"`
 	Games   []Game   `json:"games,omitempty"`
@@ -129,7 +129,7 @@ func InitMatch(parentLog logrus.FieldLogger, allWords, commonWords []string, pla
 }
 
 // Start kicks off all the games as goroutines and waits for them to complete
-func (m *Match) Start() {
+func (m *Match) Start(ctx context.Context) {
 
 	m.log.Info("match started")
 
@@ -139,7 +139,7 @@ func (m *Match) Start() {
 		wg.Add(1)
 		go func(player *Player) {
 			defer wg.Done()
-			player.PlayMatch(m.games)
+			player.PlayMatch(ctx, m.games)
 		}(player)
 	}
 
@@ -156,14 +156,14 @@ func (m *Match) Snapshot() MatchSnapshot {
 	// JSON isolator
 	body, err := json.Marshal(m.players)
 	if err != nil {
-		fmt.Println("wtf")
+		m.log.WithError(err).Error("wtf")
 		return MatchSnapshot{}
 	}
 
 	var decoupledPlayers []Player
 	err = json.Unmarshal(body, &decoupledPlayers)
 	if err != nil {
-		fmt.Println("wtf")
+		m.log.Error("wtf")
 		return MatchSnapshot{}
 	}
 
@@ -189,7 +189,7 @@ func (m *Match) Broadcast() {
 			defer wg.Done()
 			err := player.BroadcastMatch(snapshot)
 			if err != nil {
-				log.Println(err)
+				m.log.WithError(err).Error("failed to broadcast")
 			}
 		}(player)
 	}
