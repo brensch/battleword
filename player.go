@@ -31,6 +31,7 @@ type PlayerDefinition struct {
 	Name                string `json:"name,omitempty"`
 	Description         string `json:"description,omitempty"`
 	ConcurrentConnLimit int    `json:"concurrent_connection_limit,omitempty"`
+	Colour              string `json:"colour,omitempty"`
 }
 
 // This is all secret or not json readable types
