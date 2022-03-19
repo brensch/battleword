@@ -86,8 +86,6 @@ func ValidDefinition(definition PlayerDefinition) (bool, error) {
 		return false, err
 	}
 
-	fmt.Println(parsedColour)
-
 	// This is the value #FFFFFF in base 10
 	if parsedColour > 16777215 {
 		return false, fmt.Errorf("looks like the colour is too big")
