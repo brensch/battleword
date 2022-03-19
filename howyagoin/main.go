@@ -136,8 +136,10 @@ func DoPing(w http.ResponseWriter, r *http.Request) {
 	log.Println("received ping")
 
 	definition := &battleword.PlayerDefinition{
-		Name:        "howyagoin",
-		Description: "the average",
+		Name:                "howyagoin",
+		Description:         "the average",
+		ConcurrentConnLimit: 10,
+		Colour:              "#60283c",
 	}
 
 	err := json.NewEncoder(w).Encode(definition)
