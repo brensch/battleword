@@ -74,13 +74,20 @@ Shouts server no purpose except to intimidate your opponents.
 ### /ping
 In order to get the definition of your character, the engine will ping you. This is also run at the start of each match up to 10 times in order to wake up your server if you're hosting it in serverless land where everything is slightly less reliable.
 
+`concurrent_connection_limit` specifies how many concurrent requests you are happy with. It will also ensure that only `concurrent_connection_limit + 2` games are ever active at once for each player so you don't get a scenario where you have to make all 100 first guesses before being sent the second guess. If you are a big dog, you can crank this as high as you like.
+
+`colour` is spelt colour because this is a civilised repo. It is used as the colour for your part of the statistics in the UI. It has to be of the format `#FFFFFF` (not case sensitive though).
+
+
 #### Request:
 GET request - no payload
 #### Response:
 ```json
 {
 	"name": "solvo",
-	"description": "the magnificent"
+	"description": "the magnificent",
+    "concurrent_connection_limit": 10,
+    "colour": "#7e0391"
 }
 ```
 There will be more things here in the future. stay posted.
