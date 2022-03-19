@@ -3,6 +3,7 @@ package battleword
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -75,13 +76,13 @@ type PlayerGameState struct {
 	GuessDurationsNS []int64 `json:"guess_durations_ns,omitempty"`
 }
 
-func ValidDefinition(definition PlayerDefinition) (bool, error) {
+func ValidColour(colour string) (bool, error) {
 
-	if !strings.HasPrefix(definition.Colour, "#") {
+	if !strings.HasPrefix(colour, "#") {
 		return false, fmt.Errorf("colour must start with a #")
 	}
 
-	parsedColour, err := strconv.ParseUint(strings.Replace(definition.Colour, "#", "", 1), 16, 64)
+	parsedColour, err := strconv.ParseUint(strings.Replace(colour, "#", "", 1), 16, 64)
 	if err != nil {
 		return false, err
 	}
@@ -92,6 +93,17 @@ func ValidDefinition(definition PlayerDefinition) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func ColourFromString(input string) string {
+
+	hash := sha1.New()
+	hash.Write([]byte(input))
+	sum := hash.Sum(nil)
+
+	// The first 3 bytes of the sum will give us a valid hex colour
+	return fmt.Sprintf("#%X", sum[:3])
+
 }
 
 func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, error) {
@@ -123,6 +135,11 @@ func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, er
 			WithError(err).
 			Error("failed to get player definition")
 		return nil, fmt.Errorf("failed to retrieve definition from player: %+v", err)
+	}
+
+	validColour, _ := ValidColour(definition.Colour)
+	if !validColour {
+		definition.Colour = ColourFromString(definition.Description)
 	}
 
 	client := &http.Client{
