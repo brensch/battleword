@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -71,6 +73,27 @@ type PlayerGameState struct {
 	shouts []string
 
 	GuessDurationsNS []int64 `json:"guess_durations_ns,omitempty"`
+}
+
+func ValidDefinition(definition PlayerDefinition) (bool, error) {
+
+	if !strings.HasPrefix(definition.Colour, "#") {
+		return false, fmt.Errorf("colour must start with a #")
+	}
+
+	parsedColour, err := strconv.ParseUint(strings.Replace(definition.Colour, "#", "", 1), 16, 64)
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Println(parsedColour)
+
+	// This is the value #FFFFFF in base 10
+	if parsedColour > 16777215 {
+		return false, fmt.Errorf("looks like the colour is too big")
+	}
+
+	return true, nil
 }
 
 func InitPlayer(mu *sync.Mutex, log logrus.FieldLogger, uri string) (*Player, error) {
