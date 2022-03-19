@@ -26,7 +26,7 @@ func main() {
 
 	flag.Parse()
 
-	log.Println("i am solvo the solver, the world's worst wordle player")
+	log.Println("I am howyagoin. I'm a bit how ya goin")
 	log.Println("waiting to receive a wordle")
 	log.Printf("listening on port %s", port)
 
@@ -73,7 +73,14 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	word := GuessWord()
+	words, err := GetPossibleWords(prevGuesses.GuessResults)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// pick a randooo
+	word := words[rand.Intn(len(words))]
 
 	guess := battleword.Guess{
 		Guess: word,
@@ -88,8 +95,36 @@ func DoGuess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	prevGuessesJSON, _ := json.Marshal(prevGuesses)
-	log.Printf("Making random guess for game %s, turn %d: %s\n", r.Header.Get(battleword.GuessIDHeader), len(prevGuesses.GuessResults), word)
+	log.Printf("Making informed guess for game %s, turn %d: %s\n", r.Header.Get(battleword.GuessIDHeader), len(prevGuesses.GuessResults), word)
 	log.Printf("Request ID %s. Body: %s\n", r.Header.Get(battleword.GuessIDHeader), prevGuessesJSON)
+}
+
+func GetPossibleWords(prevGuessResults []battleword.GuessResult) ([]string, error) {
+
+	possibleWords := battleword.CommonWords
+	for _, prevGuessResult := range prevGuessResults {
+		var newPossibleWords []string
+		for _, newGuess := range possibleWords {
+			if WordPossible(newGuess, prevGuessResult) {
+				newPossibleWords = append(newPossibleWords, newGuess)
+			}
+		}
+		possibleWords = newPossibleWords
+	}
+	return possibleWords, nil
+}
+
+// Don't steal this boi
+func WordPossible(newGuess string, prevGuessResult battleword.GuessResult) bool {
+
+	newResult := battleword.GetResult(prevGuessResult.Guess, newGuess)
+	for i := 0; i < len(newGuess); i++ {
+		if newResult[i] != prevGuessResult.Result[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func DoPing(w http.ResponseWriter, r *http.Request) {
@@ -101,8 +136,8 @@ func DoPing(w http.ResponseWriter, r *http.Request) {
 	log.Println("received ping")
 
 	definition := &battleword.PlayerDefinition{
-		Name:        "solvo",
-		Description: "the magnificent",
+		Name:        "howyagoin",
+		Description: "the average",
 	}
 
 	err := json.NewEncoder(w).Encode(definition)
