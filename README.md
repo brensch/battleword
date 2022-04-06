@@ -1,16 +1,28 @@
 # Battleword
 Wordle is cool right now
 
-## What is Battleword
-Battleword is a competition to see who can come up with the fastest/most accurate/shoutiest wordle solver.
-
-Players host an api, then the battleword engine will make a `POST` request to their api with the state of a Wordle (starting empty).
-
-The player's api should then respond to the state of the game in the body of the post with their best guess. As soon as the battleword engine hears back from them, it will send the results of their guess in a new request. It will do that until the player's api guesses correctly, or they reach the guess limit.
-
 ## What is Wordle
-In case you haven't been on the internet over the last few months, [Wordle](https://www.nytimes.com/games/wordle/index.html) is a word game where you make attempts at guessing a secret word. You get a response once you make your guess with a colour for each letter. 
+In case you haven't been on the internet over the last few months, [Wordle](https://www.nytimes.com/games/wordle/index.html) is a word game where you make attempts at guessing a secret word. You use your feeble human brain to think of a word to submit, then the UI will colour each letter according to the Results Key below.
 
+## What is Battleword
+Battleword is a competition to see who can come up with the fastest/most accurate/shoutiest automatic Wordle solver.
+
+Players host an api somewhere accessible to the public internet. The Battleword engine is running in the cloud and users can send requests to start a Match through the [website](https://battleword.web.app/).
+
+Each word you are trying to guess is one 'Game'. A 'Match' is a collection of several Games against other opponents. All opponents in a Match receive the same set of Games (ie same secret words).
+
+The process of a Battleword match is as follows:
+
+1. The battleword engine makes a `POST` request to your API with the state of a Game (starting empty).
+2. Your solver responds to the `POST` request with its best guess according to the current state of that Game.
+3. The engine responds to your guess by submitting a new `POST` request to your API, with the results of all your previous guesses encoded as numbers according to the Results Key below.
+4. This is repeated until your solver either guesses the right word, or you run out of guesses (max 6)
+5. Many Games in a Match are run concurrently, your API should be stateless or you'll probably make things harder for yourself than necessary. 
+6. Once the all Games in the Match are complete for all players, the engine broadcasts the results of all Games for all players in the Match so you can see how you did compared to others.
+
+Details of the payloads in each step are in the API section below.
+
+## Results Key
 Battleword maps the colours you know and love in Wordle to the following numbers:
 
 | Colour | Number | Meaning                                       |
