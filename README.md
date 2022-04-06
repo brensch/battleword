@@ -14,8 +14,8 @@ Each word you are trying to guess is one 'Game'. A 'Match' is a collection of se
 The process of a Battleword match is as follows:
 
 1. The battleword engine makes a `POST` request to your API with the state of a Game (starting empty).
-2. Your solver responds to the `POST` request with its best guess according to the current state of that Game.
-3. The engine responds to your guess by submitting a new `POST` request to your API, with the results of all your previous guesses encoded as numbers according to the Results Key below.
+2. Your solver responds to the `POST` request with its best guess according to the current state of that Game. At this point, the solver has no previous results to use in its calculation, so you shouldn't think too hard here.
+3. The engine responds to your guess by submitting a new `POST` request to your API, with the results of your guess according to the Results Key below. It will also include all previous guesses of the game. (See `/guess` for more info).
 4. This is repeated until your solver either guesses the right word, or you run out of guesses (max 6)
 5. Many Games in a Match are run concurrently, your API should be stateless or you'll probably make things harder for yourself than necessary. 
 6. Once the all Games in the Match are complete for all players, the engine broadcasts the results of all Games for all players in the Match so you can see how you did compared to others.
